@@ -2,11 +2,13 @@
 
 :root {
   --background: #fdf2f4;
-  --foreground: #8b3d4a;
+  --foreground: #203562;
   --hesed-rosa: #901F1A;
   --hesed-coral: #E58E90;
   --hesed-rosa-palido: #FFDDD7;
   --hesed-blanco: #ffffff;
+
+  
 }
 
 @theme inline {
@@ -21,6 +23,7 @@
 
   --font-branley: var(--font-branley);
   --font-farmhouse: var(--font-farmhouse);
+  --font-tritopani: var(--font-tritopani);
 }
 
 html {

@@ -16,7 +16,8 @@ const ASSETS = {
   textos: "/Assets/TEXTOS",
   recursos: "/Assets/RECURSOS",
   nombres: "/Assets/nombres",
-  elementos: "/Assets/ELEMENTOS"
+  elementos: "/Assets/Componentes",
+  fotos: "/Assets/Fotos"
 } as const;
 
 /** Genera la ruta de un asset (codifica el nombre por si tiene espacios). */
@@ -28,8 +29,11 @@ const GOOGLE_MAPS_LINK = "https://maps.app.goo.gl/QiZ6GNFLGTiuuYDm8";
 const APPLE_MAPS_LINK = "https://maps.apple/p/-YkAN-fI9CzBcj";
 const GOOGLE_MAPS_LINK_2 = "https://maps.app.goo.gl/JsZbHxnG7uHcTZiw7";
 const APPLE_MAPS_LINK_2 = "https://maps.apple/p/d5veWnI2DeTnTZ";
-const ENLACE_ITEM_1 = "https://mesaderegalos.liverpool.com.mx/milistaderegalos/52002568"; // pega aquí la URL del primer botón
-const ENLACE_ITEM_2 = "https://www.sears.com.mx/Mesa-de-Regalos/253637/Te-invito-a-mi-Bautizo---Alanna-Elizabeth"; // pega aquí la URL del segundo botón
+const ENLACE_ITEM_1 = "https://maps.app.goo.gl/WctqMYxj7E7Gpigj9"; // pega aquí la URL del primer botón
+const ENLACE_ITEM_2 = "https://maps.app.goo.gl/AtVPSosPRKwvnwQx8"; // pega aquí la URL del segundo botón
+const ENLACE_ITEM_3 = "https://mesaderegalos.liverpool.com.mx/milistaderegalos/60027363"; // pega aquí la URL del segundo botón
+
+const GALERIA_FOTOS = ["F_1.JPG", "F_2.JPG", "F_3.JPG", "F_4.JPG", "F_5.JPG", "F_6.JPG", "F_7.JPG"];
 
 // Opciones para fireworks-js: tonos rosas (#D15366 / #CC6B7F ≈ hue 345–355)
 const FIREWORKS_OPTIONS = {
@@ -90,20 +94,27 @@ export default function Invitation() {
   const [modalAsistireOpen, setModalAsistireOpen] = useState(false);
   const [modalNoAsistirOpen, setModalNoAsistirOpen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [galeriaIndex, setGaleriaIndex] = useState(0);
 
   useEffect(() => {
     const isOpen = modalAsistireOpen || modalNoAsistirOpen;
-    if (isOpen) {
-      const sbWidth = window.innerWidth - document.documentElement.clientWidth;
-      document.body.style.overflow = "hidden";
-      document.body.style.paddingRight = `${sbWidth}px`;
-    } else {
-      document.body.style.overflow = "";
-      document.body.style.paddingRight = "";
-    }
+    if (!isOpen) return;
+
+    const scrollY = window.scrollY;
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = "100%";
+
     return () => {
-      document.body.style.overflow = "";
-      document.body.style.paddingRight = "";
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
+      // Restaurar el scroll sin animación: el CSS global tiene scroll-behavior: smooth,
+      // que haría que este ajuste se vea como un scroll animado en vez de instantáneo.
+      const prevScrollBehavior = document.documentElement.style.scrollBehavior;
+      document.documentElement.style.scrollBehavior = "auto";
+      window.scrollTo(0, scrollY);
+      document.documentElement.style.scrollBehavior = prevScrollBehavior;
     };
   }, [modalAsistireOpen, modalNoAsistirOpen]);
 
@@ -184,7 +195,7 @@ export default function Invitation() {
   };
 
   useEffect(() => {
-    const target = new Date("2026-06-20T14:30:00");
+    const target = new Date("2026-10-12T16:00:00");
     const update = () => {
       const now = new Date();
       const diff = target.getTime() - now.getTime();
@@ -503,7 +514,7 @@ export default function Invitation() {
   // Música de fondo en bucle al entrar a la invitación
   useEffect(() => {
     if (!invitadoData) return;
-    const audio = new Audio("/Assets/music/audio_fondo.mp3");
+    const audio = new Audio("/Assets/music/audio_fondo_2.mp3");
     audio.loop = true;
     audio.volume = 0.5;
     audioRef.current = audio;
@@ -647,21 +658,21 @@ export default function Invitation() {
       
       {/* Modal: elegir cantidad de pases al pulsar Asistiré */}
       {modalAsistireOpen && invitadoData && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 p-4" onClick={() => setModalAsistireOpen(false)}>
-          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 text-[#D15366]" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 p-4" onClick={() => setModalAsistireOpen(false)}>
+          <div className="bg-white  shadow-xl max-w-sm w-full p-6 text-[#993B4D]" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-bold uppercase tracking-wider mb-2 text-center">Asistiré</h3>
             <p className="text-sm text-gray-600 mb-4 text-center">Pases asignados: {invitadoData.pases}. Elige cuántos confirmas:</p>
             <select
               value={rsvpPasesElegidos}
               onChange={(e) => setRsvpPasesElegidos(Number(e.target.value))}
-              className="w-full rounded-xl border-2 border-[#D15366]/50 px-4 py-2 text-[#D15366] mb-4 bg-white"
+              className="w-full border-2 border-[#993B4D]/50 px-4 py-2 text-[#993B4D] mb-4 bg-white"
             >
               {Array.from({ length: invitadoData.pases }, (_, i) => i + 1).map((n) => (
                 <option key={n} value={n}>{n} {n === 1 ? "pase" : "pases"}</option>
               ))}
             </select>
             <div className="flex gap-2">
-              <button type="button" onClick={() => setModalAsistireOpen(false)} className="flex-1 rounded-xl border-2 border-[#D15366] py-2 text-sm font-bold uppercase text-[#D15366]">Cancelar</button>
+              <button type="button" onClick={() => setModalAsistireOpen(false)} className="flex-1 border-2 border-[#993B4D] py-2 text-sm font-bold uppercase text-[#993B4D]">Cancelar</button>
               <button
                 type="button"
                 onClick={async () => {
@@ -669,7 +680,7 @@ export default function Invitation() {
                   setModalAsistireOpen(false);
                 }}
                 disabled={rsvpConfirming}
-                className="flex-1 rounded-xl bg-[#D15366] py-2 text-sm font-bold uppercase text-white disabled:opacity-60"
+                className="flex-1 bg-[#993B4D] py-2 text-sm font-bold uppercase text-white disabled:opacity-60"
               >
                 {rsvpConfirming ? "Enviando..." : "Confirmar"}
               </button>
@@ -680,12 +691,12 @@ export default function Invitation() {
       )}
       {/* Modal: confirmar "No asistiré" */}
       {modalNoAsistirOpen && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 p-4" onClick={() => setModalNoAsistirOpen(false)}>
-          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 text-[#D15366]" onClick={(e) => e.stopPropagation()}>
-            <h3 className="text-lg font-bold uppercase tracking-wider mb-2 text-center">No asistiré</h3>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 p-4" onClick={() => setModalNoAsistirOpen(false)}>
+          <div className="bg-white shadow-xl max-w-sm w-full p-6 text-[#D15366]" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-bold text-[#993B4D] uppercase tracking-wider mb-2 text-center">No asistiré</h3>
             <p className="text-sm text-gray-600 mb-6 text-center">¿Confirmas que no asistirás?</p>
             <div className="flex gap-2">
-              <button type="button" onClick={() => setModalNoAsistirOpen(false)} className="flex-1 rounded-xl border-2 border-[#D15366] py-2 text-sm font-bold uppercase text-[#D15366]">Cancelar</button>
+              <button type="button" onClick={() => setModalNoAsistirOpen(false)} className="flex-1 border-2 border-[#993B4D] py-2 text-sm font-bold uppercase text-[#993B4D]">Cancelar</button>
               <button
                 type="button"
                 onClick={async () => {
@@ -693,7 +704,7 @@ export default function Invitation() {
                   setModalNoAsistirOpen(false);
                 }}
                 disabled={rsvpConfirming}
-                className="flex-1 rounded-xl bg-[#D15366] py-2 text-sm font-bold uppercase text-white disabled:opacity-60"
+                className="flex-1  bg-[#993B4D] py-2 text-sm font-bold uppercase text-white disabled:opacity-60"
               >
                 {rsvpConfirming ? "Enviando..." : "Aceptar"}
               </button>
@@ -716,83 +727,100 @@ export default function Invitation() {
       />
         {/* <Birds count={4} /> */}
       {/* Contenido por encima del fondo para que los bg de las secciones se vean */}
-      <div className="relative z-100 bg-[#FFDdD7] overflow-hidden">
+      <div className="relative z-100 bg-[#FFFFFF] overflow-hidden">
       
       {/* Hero */}
       <section
         ref={(el) => setSectionRef(el, 0)}
-        className="snap-section relative flex  flex-col items-center justify-center overflow-hidden px-6 pt-12 pb-8">
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-0 h-auto w-full">
-            <Image src={asset(ASSETS.elementos, "papel_picado.png")} alt="" width={500} height={100} className="h-full w-full object-contain scale-101" />
+        className="snap-section relative flex flex-col items-center justify-center gap-10 "
+      >
+        <div className="relative w-full min-h-screen overflow-hidden">
+
+          {/* Fondo solo de esta sección: red_paper de base, foto enmarcada encima */}
+          <Image data-animate-decor src={asset(ASSETS.elementos, "red_paper.png")} alt="" width={1080} height={1920} className="absolute inset-0 w-full h-full object-cover" priority />
+          <div className="absolute inset-6 sm:inset-10 overflow-hidden">
+            <Image data-animate-decor src={asset(ASSETS.fotos, "FOTO_PRINCIPAL.jpg")} alt="" width={1024} height={1534} className="w-full h-full object-cover py-10 brightness-80" priority />
+
+            <div className="absolute inset-x-0 bottom-20 sm:bottom-10 text-center px-4">
+              <div data-animate-title>
+                <h2 data-text-anim="reveal" className="font-tritopani text-9xl sm:text-6xl text-[#901F1A] leading-[0.4]">
+                  Ángel &
+                </h2>
+                <h2 data-text-anim="reveal" className="font-tritopani text-9xl sm:text-6xl text-[#901F1A] leading-[0.4]">
+                  Karina
+                </h2>
+              </div>
+              <p data-text-anim="reveal" className="mt-3 text-2xl sm:text-xl tracking-[0.35em] text-[#24406B]">
+                12.11.2026
+              </p>
+            </div>
           </div>
 
-        </div>
-        <div data-hero-castle data-animate-decor data-gsap-sway className="relative mb-4 w-full -top-[5%]">
-          <Image src={asset(ASSETS.elementos, "BASE_INTRO.png")} alt="" width={600} height={500} className="w-full h-auto object-contain mt-20" priority />
-          <Image src={asset(ASSETS.elementos, "corazon_final.png")} alt="" width={600} height={500} className="absolute z-5 top-10 left-1/2 -translate-x-1/2 w-20 h-auto object-contain mt-20" priority />
-
-            <div className="absolute z-5 top-55 w-full text-center">
-              <div className=" text-white uppercase text-xs ">
-                <p>con mucha ilusión y amor, <br /> quiero invitarte a compartir <br /> conmigo un día muy especial:</p>
-              </div>
-
-              <div className=" text-white uppercase">
-                <h2 data-text-anim="wave" data-text-anim-delay="1.2" className="text-5xl mt-1">mi bautizo</h2>
-                <p className="text-xl -mt-2">y mi primer año</p>
-              </div>
-
-              <div className="text-white uppercase text-xs mt-5">
-                <p>Mis papás y yo:</p>
-              </div>
-
-              <div className=" text-white">
-                <h2 data-text-anim="wave" data-text-anim-delay="1.2" className="font-farmhouse text-6xl mt-8 leading-none">Alana <br /> Elizabeth</h2>
-              </div>
-
-              <div className=" text-white uppercase text-xs  mt-4">
-                <p>te esperamos para celebrar <br /> juntos un dia lleno de amor y <br /> bendiciones.</p>
-              </div>
-            </div>
+          {/* Flores de esquina, las 4 a partir de un único asset (FLOR1.png) */}
+          <Image data-animate-decor src={asset(ASSETS.elementos, "FLOR1.png")} alt="" width={700} height={700} className="pointer-events-none absolute -top-10 -right-10 w-sm sm:w-1/3 h-auto" priority />
 
         </div>
       </section>
 
-      {/* Mensaje - globo + texto intro como imagen */}
-      {/* <section
-        ref={(el) => setSectionRef(el, 1)}
-        className="snap-section relative flex flex-col items-center justify-center px-6 bg-gradient-to-t from-[#CC6B7F]/50 from-[10%] to-transparent "
-      >
-        <div data-animate-title className="mb-2 w-full max-w-md" />
-        <div data-animate-content data-animate-decor data-gsap-pulse className="relative w-full max-w-md">
-          <Image
-            src={asset(ASSETS.recursos, "GLOBO TTEXTO.png")}
-            alt=""
-            width={400}
-            height={320}
-            className="mx-auto w-full h-auto object-contain"
-          />
-          <div className="absolute inset-0 flex items-center justify-center px-8 py-12 sm:px-12 sm:py-14 -mt-10 w-80 mx-auto">
-            <Image
-              src={asset(ASSETS.textos, "TEXTO INTRO.png")}
-              alt="Hace un año llegué para llenar de amor cada rincón de nuestro hogar. Hoy celebro mi primer vuelta al sol y quiero que seas parte de este momento tan especial."
-              width={220}
-              height={200}
-              className="w-full h-auto object-contain object-center"
-            />
-          </div>
+      {/* Diseño de flores */}
+      <div className="relative top-10 items-center justify-evenly">
+        <div className="">  
+          <Image data-animate-decor src={asset(ASSETS.elementos, "rama_1.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-20 -left-10 w-40 sm:w-1/3 h-auto rotate-180" priority />
+          <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-10 -left-10 w-34 sm:w-1/3 h-auto rotate-70" priority />
+          <Image data-animate-decor src={asset(ASSETS.elementos, "Flor_roja.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 -left-3 w-36 sm:w-1/3 h-auto rotate-190" priority />
         </div>
-      </section> */}
 
-      {/* Countdown - relative + z-20 para quedar encima del globo de la sección anterior */}
-      <section
-        ref={(el) => setSectionRef(el, 1)}
-        className="snap-section relative z-20 flex flex-col items-center justify-center z-5 "
-      >
-        <div className=" w-full h-full text-center py-5">
-          <h2 data-text-anim="reveal" className="text-4xl uppercase">Faltan:</h2>
+        <div className="">  
+            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-25 left-15 w-46 sm:w-1/3 h-auto rotate-190" priority />
+            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra3.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-15 left-20 w-38 sm:w-1/3 h-auto rotate-120" priority />
+            <Image data-animate-decor src={asset(ASSETS.elementos, "Flor_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 left-23 w-36 sm:w-1/3 h-auto rotate-190" priority />
         </div>
-        <div className="relative flex flex-wrap items-start justify-evenly gap-3 sm:gap-3 w-full h-32">
+
+        <div className="">  
+            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_2.png")} alt="" width={300} height={300} className="pointer-events-none absolute -bottom-25 left-60 -translate-x-1/2 w-44 sm:w-1/3 h-auto rotate-180" priority />
+            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra2.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-10 left-1/2 -translate-x-1/2 w-38 sm:w-1/3 h-auto rotate-230" priority />
+            <Image data-animate-decor src={asset(ASSETS.elementos, "flor_blanca.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 left-1/2 -translate-x-1/2 w-36 sm:w-1/3 h-auto rotate-190" priority />
+        </div>
+
+        <div className="">  
+            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-25 right-15 w-46 sm:w-1/3 h-auto rotate-190" priority />
+            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra3.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-15 right-20 w-38 sm:w-1/3 h-auto rotate-120" priority />
+            <Image data-animate-decor src={asset(ASSETS.elementos, "Flor_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 right-23 w-36 sm:w-1/3 h-auto rotate-190" priority />
+        </div>
+
+        <div className="">  
+          <Image data-animate-decor src={asset(ASSETS.elementos, "rama_1.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-20 -right-10 w-40 sm:w-1/3 h-auto rotate-180" priority />
+          <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-10 -right-10 w-34 sm:w-1/3 h-auto rotate-70" priority />
+          <Image data-animate-decor src={asset(ASSETS.elementos, "Flor_roja.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 -right-3 w-36 sm:w-1/3 h-auto rotate-190" priority />
+        </div>
+      </div>
+
+      {/* Nombres - Novios */}
+      <section
+          ref={(el) => setSectionRef(el, 1)}
+          className="snap-section relative z-20 flex flex-col items-center justify-center z-5 mb-15"
+        >
+          <div className=" w-full h-full text-center py-5 mt-30">
+            <h2 data-text-anim="reveal" className="text-7xl font-tritopani">Ángel Eduardo</h2>
+            <h2 data-text-anim="reveal" className="text-2xl uppercase">Hernández Ramírez</h2>
+            <h2 data-text-anim="reveal" className="text-9xl font-tritopani leading-[0.4]">&</h2>
+            <h2 data-text-anim="reveal" className="text-7xl font-tritopani">Karina Itzel</h2>
+            <h2 data-text-anim="reveal" className="text-2xl uppercase">Figueroa González</h2>
+          </div>
+      </section>
+
+      {/* Conteo regresivo */}
+      <section
+        ref={(el) => setSectionRef(el, 2)}
+        className="snap-section relative flex flex-col items-center justify-center pb-20"
+      >
+        <Image src={asset(ASSETS.elementos, "red_paper.png")} alt="" width={1080} height={1920} className="absolute inset-0 w-full h-full object-cover" priority />
+
+        <div className="relative flex flex-wrap items-start justify-evenly gap-3 sm:gap-3 w-full h-auto py-5">
+
+        <div className=" w-full h-full text-center">
+          <h2 data-text-anim="reveal" className="text-7xl text-white font-tritopani">Faltan:</h2>
+        </div>
           {/* capa de fondo — recibe el efecto tela+viento sin afectar los números */}
           <div  className="absolute inset-0"
             style={{
@@ -806,17 +834,17 @@ export default function Invitation() {
             <span className="text-3xl font-semibold text-white sm:text-5xl md:text-6xl">{countdown.days}</span>
             <span className="text-xs uppercase tracking-wider text-white/90">Días</span>
           </div>
-          <span className="relative z-10 text-4xl font-semibold text-white/80">|</span>
+          <span className="relative z-10 text-4xl font-semibold text-white/80">:</span>
           <div className="relative z-10 flex flex-col items-center">
             <span className="text-3xl font-semibold text-white sm:text-5xl md:text-6xl">{countdown.hours}</span>
             <span className="text-xs uppercase tracking-wider text-white/90">Horas</span>
           </div>
-          <span className="relative z-10 text-4xl font-semibold text-white/80">|</span>
+          <span className="relative z-10 text-4xl font-semibold text-white/80">:</span>
           <div className="relative z-10 flex flex-col items-center">
             <span className="text-3xl font-semibold text-white sm:text-5xl md:text-6xl">{countdown.minutes}</span>
             <span className="text-xs uppercase tracking-wider text-white/90">Min</span>
           </div>
-          <span className="relative z-10 text-4xl font-semibold text-white/80">|</span>
+          <span className="relative z-10 text-4xl font-semibold text-white/80">:</span>
           <div className="relative z-10 flex flex-col items-center">
             <span className="text-3xl font-semibold text-white sm:text-5xl md:text-6xl">{countdown.seconds}</span>
             <span className="text-xs uppercase tracking-wider text-white/90">Seg</span>
@@ -824,231 +852,199 @@ export default function Invitation() {
         </div>
       </section>
 
-      {/* Padre y padrinos*/}
-      <section
-        ref={(el) => setSectionRef(el, 2)}
-        className="snap-section relative flex flex-col items-center justify-center gap-10 "
-
-      >
-        <div className="w-full h-full -mt-15">
-
-          <Image data-anim-pop src={asset(ASSETS.elementos, "base.png")} alt="" width={600} height={500} className="w-full h-auto object-contain" priority />
-          <div className="w-full h-full text-center absolute top-5">
-            <div className=" text-white uppercase text-xs">
-              <p>
-                Dios mío, gracias por el regalo de <br /> 
-                la vida. Hoy te pido que me tomes <br />
-                de tu mano, ilumines mi camino y me <br />
-                acompañes siempre con tu amor. <br /> 
-                Que nunca me falten tus <br />
-                bendiciones.
-              </p>
-              <img src={asset(ASSETS.elementos, "icono1_Padres_padrinos.png")} alt="" className="absolute w-50 top-20 left-1/2 -translate-x-1/2"/>
-            </div>
-
-            <div className=" text-white mt-6">
-              <h2 data-text-anim="reveal" className="font-farmhouse text-5xl">Mis Padres:</h2>
-              <p className="text-xs mt-1 uppercase">Ana Elizabeth Hernández <br />
-              y <br />
-              Williams Hernández</p>
-            </div>
-
-            <img src={asset(ASSETS.elementos, "icono2_padres_padrinos.png")} alt="" className="absolute w-50 top-58 left-1/2 -translate-x-1/2"/>
-
-            <div className=" text-white mt-10">
-              <h2 data-text-anim="reveal" className="font-farmhouse text-5xl">Mis Padrinos:</h2>
-              <p className="text-xs mt-1 uppercase">Ricardo Hernández <br />
-              y <br />
-              Reyna Cancino</p>
-            </div>
-
-            <img src={asset(ASSETS.elementos, "icono2_padres_padrinos.png")} alt="" className="absolute w-50 top-93 left-1/2 -translate-x-1/2"/>
-
-            <div className=" text-white mt-10">
-              <h2 data-text-anim="reveal" className="font-farmhouse text-5xl">Mis Padrinos <br /> de evangelio:</h2>
-              <p className="text-xs mt-1 uppercase mt-2">Felipe de Jesús Hernández <br />
-              y Vanesa Rodriguez</p><br />
-              <p className="text-xs mt-1 uppercase">Jesús Alberto Hernández y <br />
-              Stephania Mondragón</p>
-            </div>
-
-          </div>
+      {/* Diseño de flores */}
+      <div className="relative top-10 items-center justify-evenly z-10" >
+        <div className="">  
+          <Image data-animate-decor src={asset(ASSETS.elementos, "rama_1.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-20 -left-10 w-40 sm:w-1/3 h-auto rotate-180" priority />
+          <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-10 -left-10 w-34 sm:w-1/3 h-auto rotate-70" priority />
+          <Image data-animate-decor src={asset(ASSETS.elementos, "Flor_roja.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 -left-3 w-36 sm:w-1/3 h-auto rotate-190" priority />
         </div>
+
+        <div className="">  
+            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-25 left-15 w-46 sm:w-1/3 h-auto rotate-190" priority />
+            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra3.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-15 left-20 w-38 sm:w-1/3 h-auto rotate-120" priority />
+            <Image data-animate-decor src={asset(ASSETS.elementos, "Flor_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 left-23 w-36 sm:w-1/3 h-auto rotate-190" priority />
+        </div>
+
+        <div className="">  
+            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_2.png")} alt="" width={300} height={300} className="pointer-events-none absolute -bottom-25 left-60 -translate-x-1/2 w-44 sm:w-1/3 h-auto rotate-180" priority />
+            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra2.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-10 left-1/2 -translate-x-1/2 w-38 sm:w-1/3 h-auto rotate-230" priority />
+            <Image data-animate-decor src={asset(ASSETS.elementos, "flor_blanca.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 left-1/2 -translate-x-1/2 w-36 sm:w-1/3 h-auto rotate-190" priority />
+        </div>
+
+        <div className="">  
+            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-25 right-15 w-46 sm:w-1/3 h-auto rotate-190" priority />
+            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra3.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-15 right-20 w-38 sm:w-1/3 h-auto rotate-120" priority />
+            <Image data-animate-decor src={asset(ASSETS.elementos, "Flor_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 right-23 w-36 sm:w-1/3 h-auto rotate-190" priority />
+        </div>
+
+        <div className="">  
+          <Image data-animate-decor src={asset(ASSETS.elementos, "rama_1.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-20 -right-10 w-40 sm:w-1/3 h-auto rotate-180" priority />
+          <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-10 -right-10 w-34 sm:w-1/3 h-auto rotate-70" priority />
+          <Image data-animate-decor src={asset(ASSETS.elementos, "Flor_roja.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 -right-3 w-36 sm:w-1/3 h-auto rotate-190" priority />
+        </div>
+      </div>
+
+      {/* Lista de Padrinos */}
+      <section
+          ref={(el) => setSectionRef(el, 1)}
+          className="snap-section relative z-20 flex flex-col items-center justify-center z-5 mb-15"
+        >
+          <div className="text-center py-5 mt-30">
+            <div>
+              <h2 data-text-anim="reveal" className="text-7xl font-tritopani">Nuestros padrinos</h2>
+            </div>
+
+            <div className="w-full h-full">
+              <h2 data-text-anim="reveal" className="text-xl uppercase italic my-4">Padrinos de velación:</h2>
+              <h2 data-text-anim="reveal" className="text-2xl uppercase">ALBERTINA RAMÍREZ <br /> MORENO</h2>
+              <h2 data-text-anim="reveal" className="text-2xl uppercase">&</h2>
+              <h2 data-text-anim="reveal" className="text-2xl uppercase">FRANCISCO JAVIER <br /> RIVERA MARTÍNEZ</h2>
+              <Image data-animate-decor src={asset(ASSETS.elementos, "RAMO_AZUL.png")} alt="" width={300} height={300} className="pointer-events-none mx-auto mt-10 w-32 sm:w-1/3 h-auto" priority />
+            </div>
+
+            <div className="w-full h-full">
+              <h2 data-text-anim="reveal" className="text-xl uppercase italic my-4">MADRINAS DE ANILLO:</h2>
+              <h2 data-text-anim="reveal" className="text-2xl uppercase">MARGOT FIGUEROA <br /> VÁZQUEZ</h2>
+              <h2 data-text-anim="reveal" className="text-2xl uppercase">&</h2>
+              <h2 data-text-anim="reveal" className="text-2xl uppercase">Laura Patricia <br /> Figueroa Vázquez</h2>
+              <Image data-animate-decor src={asset(ASSETS.elementos, "RAMO_AZUL.png")} alt="" width={300} height={300} className="pointer-events-none mx-auto mt-10 w-32 sm:w-1/3 h-auto" priority />
+            </div>
+
+            <div className="w-full h-full">
+              <h2 data-text-anim="reveal" className="text-xl uppercase italic my-4">Padrinos de Lazos:</h2>
+              <h2 data-text-anim="reveal" className="text-2xl uppercase">Oralia Figueroa <br /> Vázquez</h2>
+              <h2 data-text-anim="reveal" className="text-2xl uppercase">&</h2>
+              <h2 data-text-anim="reveal" className="text-2xl uppercase">Miguel Esteban <br /> De La Cruz Cansino</h2>
+              <Image data-animate-decor src={asset(ASSETS.elementos, "RAMO_AZUL.png")} alt="" width={300} height={300} className="pointer-events-none mx-auto mt-10 w-32 sm:w-1/3 h-auto" priority />
+            </div>
+
+            <div className="w-full h-full">
+              <h2 data-text-anim="reveal" className="text-xl uppercase italic my-4">Padrinos de Brindis:</h2>
+              <h2 data-text-anim="reveal" className="text-2xl uppercase">María del Carmen <br /> Figueroa Vázquez</h2>
+              <h2 data-text-anim="reveal" className="text-2xl uppercase">&</h2>
+              <h2 data-text-anim="reveal" className="text-2xl uppercase">Eduardo Victoria <br /> Alboreso</h2>
+              <Image data-animate-decor src={asset(ASSETS.elementos, "RAMO_AZUL.png")} alt="" width={300} height={300} className="pointer-events-none mx-auto mt-10 w-32 sm:w-1/3 h-auto" priority />
+            </div>
+      
+            <div className="w-full h-full">
+              <h2 data-text-anim="reveal" className="text-xl uppercase italic my-4">Padrinos de Arras:</h2>
+              <h2 data-text-anim="reveal" className="text-2xl uppercase">Dori Cruz <br /> Rodríguez González</h2>
+              <h2 data-text-anim="reveal" className="text-2xl uppercase">&</h2>
+              <h2 data-text-anim="reveal" className="text-2xl uppercase">José Dario <br /> Barrios Roblero</h2>
+            </div>
+          </div>
       </section>
 
-      {/* Fecha, Hora y Lugar */}
+      {/* Fecha, lugar, código de vestimenta y regalo */}
       <section
-        ref={(el) => setSectionRef(el, 3)}
-        className="snap-section relative flex flex-col items-center justify-center mt-5"
+        ref={(el) => setSectionRef(el, 2)}
+        className="snap-section relative flex flex-col items-center justify-center pb-20"
       >
+        <Image src={asset(ASSETS.elementos, "red_paper.png")} alt="" width={1080} height={1920} className="absolute inset-0 w-full h-full object-cover" priority />
 
-        <div className="w-full flex flex-col items-center gap-6">
+        <div className="relative flex flex-wrap items-start justify-evenly gap-3 sm:gap-3 w-full h-auto py-5">
 
-          <Image data-anim-pop src={asset(ASSETS.elementos, "diseño_información.png")} alt="" width={600} height={500} className="absolute w-full h-auto object-contain mt-1 -z-5" priority />
-
-          <div className=" w-full">
-            {/* Card 1 - Fecha */}
-            <div className="flex flex-col gap-2">
-              <div className="text-center text-6xl font-farmhouse">
-                <h2 data-text-anim="reveal">Fecha:</h2>
-              </div>
-              <div data-animate-content className="flex items-center gap-3 mx-auto">
-                <div className="relative w-20 h-20 shrink-0">
-                  <Image data-anim-pop data-animate-decor src={asset(ASSETS.elementos, "cuadro_iconos_info.png")} alt="" fill className="object-contain" />
-                  <Image data-anim-pop data-animate-decor src={asset(ASSETS.elementos, "icono_calendario.png")} alt="" width={70} height={70} className="mx-auto object-contain p-3" />
-                </div>
-                <div className="flex flex-col">
-                  <p className="text-3xl uppercase leading-tight">Sábado</p>
-                  <p className="text-lg uppercase">20. junio. 26</p>
-                </div>
-              </div>
+          <div className=" w-full h-full text-center my-3">
+            <h2 data-text-anim="reveal" className="text-7xl text-white font-tritopani">Fecha:</h2>
+            <div className="flex flex-row items-center justify-center gap-4 h-full">
+              <img src={asset(ASSETS.elementos, "ICONOS-FECHA.png")} alt="" className="w-16"/>
+              <h2 data-text-anim="reveal" className="text-xl text-white uppercase text-left leading-6">12 de <br /> octubre <br /> 2026</h2>
             </div>
-
-            <div className="flex flex-col mt-10">
-              <div className="text-center text-6xl font-farmhouse">
-                <h2 data-text-anim="reveal">Misa:</h2>
-              </div>
-              <div data-animate-content className="flex items-center gap-3 mx-auto">
-                <div className="relative w-20 h-20 shrink-0">
-                  <Image data-animate-decor src={asset(ASSETS.elementos, "icono_iglesia.png")} alt="" fill className="object-contain" />
-                  {/* <Image data-animate-decor src={asset(ASSETS.elementos, "icono_iglesia.png")} alt="" width={270} height={270} className="mx-auto w-full object-contain p-3" /> */}
-                </div>
-                <div className="flex flex-col">
-                  <p className="text-xs uppercase leading-tight">iglesia de <br />guadalupe a las </p>
-                  <p className="text-xl uppercase leading-tight">12:00 pm</p>
-                  {/* <p className="text-sm uppercase leading-tight">Misa Iglesia de <br /> Guadalupe.</p> */}
-                </div>
-              </div>
-                <div className="flex items-center m-auto gap-2">
-                  <div data-animate-content className="mt-1 flex gap-3 justify-center">
-                  <a
-                    href={GOOGLE_MAPS_LINK_2}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center w-10 h-10 rounded-full bg-white shadow-md transition hover:scale-110 active:scale-95"
-                    aria-label="Google Maps"
-                  >
-                    <svg viewBox="0 0 24 24" className="w-6 h-6" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
-                      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                    </svg>
-                  </a>
-                  <a
-                    href={APPLE_MAPS_LINK_2}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center w-10 h-10 rounded-full bg-black shadow-md transition hover:scale-110 active:scale-95"
-                    aria-label="Apple Maps"
-                  >
-                    <svg viewBox="0 0 24 24" className="w-6 h-6" fill="white" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
-                    </svg>
-                  </a>
-                </div>
-                </div>
+          </div>
+  
+          <div className=" w-full h-full text-center my-3">
+            <h2 data-text-anim="reveal" className="text-7xl text-white font-tritopani">Misa religiosa:</h2>
+            <div className="flex flex-row items-center justify-center gap-4 h-full">
+              <img src={asset(ASSETS.elementos, "ICONOS-PARROQUIA.png")} alt="" className="w-20"/>
+              <h2 data-text-anim="reveal" className="text-xl text-white uppercase text-left leading-6">04 PM <br /> <span className="text-base">PARROQUIA DE</span> <br /> NUESTRA SEÑORA <br /> DEL SAGRADO <br /> CORAZÓN</h2>
             </div>
+            <a
+              href={ENLACE_ITEM_1}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block bg-[#993B4D] text-[#ffffff] mt-6 px-6 py-2 text-center text-xs font-bold uppercase tracking-wider shadow-lg transition hover:bg-[#b84556] active:scale-[0.98]"
+              >
+              ver ubicación
+            </a>
+          </div>
 
-            {/* Card 1 - Lugar */}
-
-            {/* Card 1 - Hora */}
-            <div className="flex flex-col mt-6">
-              <div className="text-center text-6xl font-farmhouse">
-                <h2 data-text-anim="reveal">Hora:</h2>
-              </div>
-              <div data-animate-content className="flex items-center gap-3 mx-auto">
-                <div className="relative w-20 h-20 shrink-0">
-                  <Image data-animate-decor src={asset(ASSETS.elementos, "cuadro_iconos_info.png")} alt="" fill className="object-contain" />
-                  <Image data-animate-decor src={asset(ASSETS.elementos, "icono_reloj.png")} alt="" width={70} height={70} className="mx-auto object-contain p-3" />
-                </div>
-                <div className="flex flex-col">
-                  <div>
-                    <p className="text-3xl uppercase leading-tight">2:30 pm</p>
-                  </div>
-                </div>
-              </div>
+          <div className=" w-full h-full text-center my-3">
+            <h2 data-text-anim="reveal" className="text-7xl text-white font-tritopani">Recepción:</h2>
+            <div className="flex flex-row items-center justify-center gap-4 h-full">
+              <img src={asset(ASSETS.elementos, "ICONOS-PARROQUIA.png")} alt="" className="w-20"/>
+              <h2 data-text-anim="reveal" className="text-xl text-white uppercase text-left leading-6">05 PM <br /> Hotel casa <br /> kolping</h2>
             </div>
+            <a
+              href={ENLACE_ITEM_2}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block bg-[#993B4D] text-[#ffffff] mt-6 px-6 py-2 text-center text-xs font-bold uppercase tracking-wider shadow-lg transition hover:bg-[#b84556] active:scale-[0.98]"
+              >
+              ver ubicación
+            </a>
+          </div>
 
-
-            <div className="flex flex-col gap-2 mt-5">
-              <div className="text-center text-6xl font-farmhouse">
-                <h2 data-text-anim="reveal">Lugar:</h2>
+          <div className="w-full h-full text-center my-3">
+            <h2 data-text-anim="reveal" className="text-7xl text-white font-tritopani">Vestimenta:</h2>
+            <p data-text-anim="reveal" className="text-white uppercase text-center text-sm leading-5">COCKTAIL/RIGUROSA FORMALIDAD  <br />DE NOCHE</p>
+            <div className="flex flex-row items-center justify-center gap-4 h-full my-4">
+              <div>
+                <img src={asset(ASSETS.elementos, "ICONOS-VESTIDO.png")} alt="" className="w-24 mx-auto my-3"/>
+                <p data-text-anim="reveal" className="text-white uppercase text-center text-sm leading-5">VESTIDOS LARGOS O <br /> DE CÓCTEL A LA RODILLA</p>
               </div>
-              <div data-animate-content className="flex items-center gap-3 mx-auto">
-                <div className="relative w-20 h-20 shrink-0">
-                  <Image data-animate-decor src={asset(ASSETS.elementos, "cuadro_iconos_info.png")} alt="" fill className="object-contain" />
-                  <Image data-animate-decor src={asset(ASSETS.elementos, "icono_ubicacion.png")} alt="" width={70} height={70} className="mx-auto object-contain p-3" />
-                </div>
-                <div className="flex flex-col">
-                  <p className="text-xs uppercase leading-tight">Salón "quinta <br /> loma bonita" el <br /> carmen, loma <br /> bontia tuxtla <br /> gtz.</p>
-                  {/* <p className="text-sm uppercase leading-tight">Misa Iglesia de <br /> Guadalupe.</p> */}
-                </div>
+              <div>
+                <img src={asset(ASSETS.elementos, "ICONOS-TRAJE.png")} alt="" className="w-24 mx-auto my-3"/>
+                <p data-text-anim="reveal" className="text-white uppercase text-center text-sm leading-5">TRAJE SASTRE FORMAL  <br />EN TONOS OSCUROS</p>
               </div>
-                <div className="flex items-center m-auto gap-2">
-                  <div data-animate-content className="flex gap-3 justify-center">
-                    <a
-                      href={GOOGLE_MAPS_LINK}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center w-10 h-10 rounded-full bg-white shadow-md transition hover:scale-110 active:scale-95"
-                      aria-label="Google Maps"
-                    >
-                      <svg viewBox="0 0 24 24" className="w-6 h-6" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
-                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                      </svg>
-                    </a>
-                    <a
-                      href={APPLE_MAPS_LINK}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center w-10 h-10 rounded-full bg-black shadow-md transition hover:scale-110 active:scale-95"
-                      aria-label="Apple Maps"
-                    >
-                      <svg viewBox="0 0 24 24" className="w-6 h-6" fill="white" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
-                      </svg>
-                    </a>
-                    </div>
-                </div>
-        
             </div>
           </div>
 
-        </div>
+          <div className="w-full h-full text-center my-3">
+            <p data-text-anim="reveal" data-text-split="words" className="text-white uppercase text-center text-sm leading-5 border-2 border-[#993B4D] mx-5 p-3">Les pedimos amablemente evitar atuendos en tonos blanco/marfil, así como en gama vino y azul, ya que estos colores están reservados de forma exclusiva para los novios y nuestra corte de honor.</p>
+          </div>
 
+          <div className="w-full h-full text-center my-3">
+            <h2 data-text-anim="reveal" className="text-7xl text-white font-tritopani">Mesa de reglos:</h2>
+            <div className="flex flex-row items-center justify-center gap-4 h-full">
+              <img src={asset(ASSETS.elementos, "ICONOS-REGALOS.png")} alt="" className="w-20"/>
+              <h2 data-text-anim="reveal" className="text-4xl text-white uppercase text-left leading-6">lIVERPOOL</h2>
+            </div>
+            <a
+              href={ENLACE_ITEM_3}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block bg-[#993B4D] text-[#FFFFFF] mt-6 px-6 py-2 text-center text-xs font-bold uppercase tracking-wider shadow-lg transition hover:bg-[#b84556] active:scale-[0.98]"
+              >
+              abrir mesa de regalos
+            </a>
+          </div>
+
+          {/* Flores de esquina, las 4 a partir de un único asset (FLOR1.png) */}
+          <Image data-animate-decor src={asset(ASSETS.elementos, "FLOR1.png")} alt="" width={700} height={700} className="pointer-events-none absolute -top-10 -right-10 w-56 sm:w-1/3 h-auto" priority />
+          <Image data-animate-decor src={asset(ASSETS.elementos, "FLOR1.png")} alt="" width={700} height={700} className="pointer-events-none absolute -top-10 -left-10 w-56 sm:w-1/3 h-auto -scale-x-100 " priority />
+          <Image data-animate-decor src={asset(ASSETS.elementos, "FLOR1.png")} alt="" width={700} height={700} className="pointer-events-none absolute -bottom-30 -left-10 w-56 sm:w-1/3 h-auto rotate-180" priority />
+          <Image data-animate-decor src={asset(ASSETS.elementos, "FLOR1.png")} alt="" width={700} height={700} className="pointer-events-none absolute -bottom-30 -right-10 w-56 sm:w-1/3 h-auto -scale-x-100 rotate-180" priority />
+        
+        </div>
       </section>
 
       {/* RSVP */}
       <section
-        ref={(el) => setSectionRef(el, 4)}
-        className="snap-section relative flex flex-col items-center justify-center z-5"
-      >
-        <div className="absolute inset-0 overflow-hidden">
-          {/* <div data-animate-decor data-gsap-scroll-rotate className="absolute bottom-[75%] left-[5%] h-18 w-18">
-            <Image src={asset(ASSETS.recursos, "ESTRELLAA DORADAA.png")} alt="" width={100} height={100} className="h-full w-full object-contain" />
-          </div>
-          <div data-animate-decor data-gsap-rotate className="absolute bottom-[70%] right-[3%] h-15 w-15">
-            <Image src={asset(ASSETS.recursos, "ESTRELLA.png")} alt="" width={100} height={100} className="h-full w-full object-contain" />
-          </div> */}
+          ref={(el) => setSectionRef(el, 4)}
+          className="snap-section relative flex flex-col items-center justify-center z-5 h-auto my-20"
+        >
+        <div className=" inset-0 overflow-hidden">
+
         </div>
         <div data-animate-title className="mb-2 w-full max-w-md" />
         <div className="relative w-full max-w-md">
-          <Image
-            data-anim-pop
-            src={asset(ASSETS.elementos, "papel_picado_confirmacion.png")}
-            alt=""
-            width={500}
-            height={400}
-            className="mx-auto w-full h-auto object-contain"
-          />
-          <div className="absolute inset-0 flex flex-col items-center justify-center px-4 sm:px-12 w-80 m-auto">
-            <div data-animate-title className="w-full text-center text-white text-5xl">
-            
-              <h2 className="font-farmhouse">{invitadoData.nombre}</h2>
+          <h2 className="text-8xl font-tritopani text-center leading-8">
+            Confirma tu <br /> asistencia
+          </h2>
+          <div className=" inset-0 flex flex-col items-center justify-center px-4 sm:px-12 w-80 m-auto">
+            <div data-animate-title className="w-full text-center text-2xl my-10">
+              <h2 className="">{invitadoData.nombre}</h2>
             </div>
             {/* <div data-animate-content className="mt-4 w-full max-w-[200px] mx-auto text-center">
               <h2 className="text-lg font-semibold uppercase tracking-wider text-[#ffddd7]">{invitadoData.nombre}</h2>
@@ -1057,15 +1053,15 @@ export default function Invitation() {
               <div data-anim-pop className="mt-4 text-center">
                 {invitadoData.pasesConfirmados > 0 ? (
                   <div className="flex flex-col items-center gap-1">
-                    <p className="text-2xl font-bold text-[#ffddd7] uppercase tracking-wide">¡Te esperamos!</p>
+                    <p className="text-2xl font-bold text-[#993B4D] uppercase tracking-wide">¡Te esperamos!</p>
                     {invitadoData.pasesConfirmados > 1 && (
-                      <p className="text-xs text-[#ffddd7]/80">{invitadoData.pasesConfirmados} pases confirmados</p>
+                      <p className="text-xs text-[#993B4D]/80">{invitadoData.pasesConfirmados} pases confirmados</p>
                     )}
                   </div>
                 ) : (
                   <div className="flex flex-col items-center gap-1">
-                    <p className="text-lg font-semibold text-[#ffddd7] uppercase tracking-wide">Gracias por avisar</p>
-                    <p className="text-xs text-[#ffddd7]/80">Lamentamos que no puedas acompañarnos.</p>
+                    <p className="text-lg font-semibold text-[#993B4D] uppercase tracking-wide">Gracias por avisar</p>
+                    <p className="text-xs text-[#993B4D]/80">Lamentamos que no puedas acompañarnos.</p>
                   </div>
                 )}
               </div>
@@ -1077,7 +1073,7 @@ export default function Invitation() {
                     type="button"
                     onClick={() => setModalNoAsistirOpen(true)}
                     disabled={rsvpConfirming}
-                    className="border-2 border-[#FFDDD7] bg-transparent px-4 py-2 text-center text-xs font-bold uppercase tracking-wider text-[#FFDDD7] transition hover:/10 active:scale-[0.98] disabled:opacity-60"
+                    className="border-2 border-[#993B4D] bg-transparent px-4 py-2 text-center text-xs font-bold uppercase tracking-wider text-[#993B4D] transition hover:/10 active:scale-[0.98] disabled:opacity-60"
                   >
                     No asistiré
                   </button>
@@ -1085,7 +1081,7 @@ export default function Invitation() {
                     type="button"
                     onClick={() => setModalAsistireOpen(true)}
                     disabled={rsvpConfirming}
-                    className=" text-[#901f1a] bg-[#ffddd7] px-6 py-2 text-center text-xs font-bold uppercase tracking-wider shadow-lg transition hover:bg-[#b84556] active:scale-[0.98] disabled:opacity-60"
+                    className=" text-[#ffffff] bg-[#993B4D] px-6 py-2 text-center text-xs font-bold uppercase tracking-wider shadow-lg transition hover:bg-[#b84556] active:scale-[0.98] disabled:opacity-60"
                   >
                     Asistiré
                   </button>
@@ -1099,81 +1095,179 @@ export default function Invitation() {
         </div>
       </section>
 
-      {/* Mesa de regalos */}
-      <section
-        ref={(el) => setSectionRef(el, 5)}
-        className="snap-section relative flex flex-col items-center justify-center gap-10 mt-3"
-      >
-        <div className="w-full h-full -mt-20">
+      {/* Diseño de flores */}
+      <div className="relative top-20 items-center justify-evenly z-10" >
+        <div className="">  
+          <Image data-animate-decor src={asset(ASSETS.elementos, "rama_1.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-20 -left-10 w-40 sm:w-1/3 h-auto rotate-180" priority />
+          <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-10 -left-10 w-34 sm:w-1/3 h-auto rotate-70" priority />
+          <Image data-animate-decor src={asset(ASSETS.elementos, "Flor_roja.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 -left-3 w-36 sm:w-1/3 h-auto rotate-190" priority />
+        </div>
 
-          <Image data-picado-wind src={asset(ASSETS.elementos, "base_redonda.png")} alt="" width={900} height={500} className="w-full h-full object-contain" priority />
+        <div className="">  
+            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-25 left-15 w-46 sm:w-1/3 h-auto rotate-190" priority />
+            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra3.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-15 left-20 w-38 sm:w-1/3 h-auto rotate-120" priority />
+            <Image data-animate-decor src={asset(ASSETS.elementos, "Flor_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 left-23 w-36 sm:w-1/3 h-auto rotate-190" priority />
+        </div>
 
-          <div className="w-full h-auto absolute top-1 text-center -mt-3">
-            <div data-animate-title className="w-full h-full">
-              <div className="text-white">
-                <h5 data-text-anim="reveal" className="text-4xl text-[#901F1A] font-farmhouse">Mesa de</h5>
-                <h2 data-text-anim="wave" data-text-anim-delay="0.4" className="text-6xl text-[#901F1A] font-farmhouse">Regalos</h2>
-              </div>
+        <div className="">  
+            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_2.png")} alt="" width={300} height={300} className="pointer-events-none absolute -bottom-25 left-60 -translate-x-1/2 w-44 sm:w-1/3 h-auto rotate-180" priority />
+            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra2.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-10 left-1/2 -translate-x-1/2 w-38 sm:w-1/3 h-auto rotate-230" priority />
+            <Image data-animate-decor src={asset(ASSETS.elementos, "flor_blanca.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 left-1/2 -translate-x-1/2 w-36 sm:w-1/3 h-auto rotate-190" priority />
+        </div>
+
+        <div className="">  
+            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-25 right-15 w-46 sm:w-1/3 h-auto rotate-190" priority />
+            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra3.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-15 right-20 w-38 sm:w-1/3 h-auto rotate-120" priority />
+            <Image data-animate-decor src={asset(ASSETS.elementos, "Flor_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 right-23 w-36 sm:w-1/3 h-auto rotate-190" priority />
+        </div>
+
+        <div className="">  
+          <Image data-animate-decor src={asset(ASSETS.elementos, "rama_1.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-20 -right-10 w-40 sm:w-1/3 h-auto rotate-180" priority />
+          <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-10 -right-10 w-34 sm:w-1/3 h-auto rotate-70" priority />
+          <Image data-animate-decor src={asset(ASSETS.elementos, "Flor_roja.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 -right-3 w-36 sm:w-1/3 h-auto rotate-190" priority />
+        </div>
+      </div>
+
+     {/* Galeria de fotos */}
+      <div>
+        <section
+          ref={(el) => setSectionRef(el, 2)}
+          className="snap-section relative flex flex-col items-center justify-center pb-20"
+        >
+          <Image src={asset(ASSETS.elementos, "red_paper.png")} alt="" width={1080} height={1920} className="absolute inset-0 w-full h-full object-cover" priority />
+
+          <div className="relative w-full px-10">
+            <h2 data-text-anim="reveal" className="mb-6 text-center text-5xl text-white font-tritopani">Nuestra Historia</h2>
+
+            <div className="relative w-full aspect-[3/4] overflow-hidden border-4 border-[#FFDDD7]/80 shadow-lg">
+              {GALERIA_FOTOS.map((foto, i) => (
+                <Image
+                  key={foto}
+                  src={asset(ASSETS.fotos, foto)}
+                  alt=""
+                  fill
+                  priority={i === 0}
+                  className={`object-cover transition-opacity duration-500 ${i === galeriaIndex ? "opacity-100" : "opacity-0"}`}
+                />
+              ))}
+
+              <button
+                type="button"
+                onClick={() => setGaleriaIndex((i) => (i - 1 + GALERIA_FOTOS.length) % GALERIA_FOTOS.length)}
+                aria-label="Foto anterior"
+                className="absolute left-3 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-[#901F1A]/85 text-[#FFDDD7] shadow-md transition active:scale-90"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                onClick={() => setGaleriaIndex((i) => (i + 1) % GALERIA_FOTOS.length)}
+                aria-label="Foto siguiente"
+                className="absolute right-3 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-[#901F1A]/85 text-[#FFDDD7] shadow-md transition active:scale-90"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
+              </button>
             </div>
 
-            <div className="flex justify-evenly">
-              <div data-gift-card className="text-white uppercase mt-8 mb-2">
-                <img src={asset(ASSETS.elementos, "LOGO_LIVERPOOL.png")} alt="" className="w-30 mb-6"/>
-                {/* <p className="text-sm mt-3 text-[#901F1A]">NO. 123456789</p> */}
-                <a
-                  href={ENLACE_ITEM_1}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-block bg-[#901F1A] text-[#FFDDD7] px-6 py-2 text-center text-xs font-bold uppercase tracking-wider shadow-lg transition hover:bg-[#b84556] active:scale-[0.98]"
-                >
-                  Abrir
-                </a>
-              </div>
-              <div data-gift-card className="text-white uppercase mt-8 mb-2">
-                <img src={asset(ASSETS.elementos, "logo_sears.png")} alt="" className="w-30 mb-6"/>
-                {/* <p className="text-sm mt-3 text-[#901F1A]">NO. 123456789</p> */}
-                <a
-                  href={ENLACE_ITEM_2}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-block bg-[#901F1A] text-[#FFDDD7] px-6 py-2 text-center text-xs font-bold uppercase tracking-wider shadow-lg transition hover:bg-[#b84556] active:scale-[0.98]"
-                >
-                  Abrir
-                </a>
-              </div>
+            <div className="mt-4 flex justify-center gap-2">
+              {GALERIA_FOTOS.map((foto, i) => (
+                <button
+                  key={foto}
+                  type="button"
+                  onClick={() => setGaleriaIndex(i)}
+                  aria-label={`Ir a la foto ${i + 1}`}
+                  className={`h-2 w-2 rounded-full transition ${i === galeriaIndex ? "bg-[#FFDDD7]" : "bg-[#FFDDD7]/40"}`}
+                />
+              ))}
             </div>
           </div>
 
-        </div>
-      </section>
+        </section>
+      </div>
 
-      {/* GRACIAS POR ASISTIR */}
+      {/* Diseño de flores */}
+      <div className="relative top-20 items-center justify-evenly z-10" >
+        <div className="">  
+          <Image data-animate-decor src={asset(ASSETS.elementos, "rama_1.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-20 -left-10 w-40 sm:w-1/3 h-auto rotate-180" priority />
+          <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-10 -left-10 w-34 sm:w-1/3 h-auto rotate-70" priority />
+          <Image data-animate-decor src={asset(ASSETS.elementos, "Flor_roja.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 -left-3 w-36 sm:w-1/3 h-auto rotate-190" priority />
+        </div>
+
+        <div className="">  
+            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-25 left-15 w-46 sm:w-1/3 h-auto rotate-190" priority />
+            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra3.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-15 left-20 w-38 sm:w-1/3 h-auto rotate-120" priority />
+            <Image data-animate-decor src={asset(ASSETS.elementos, "Flor_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 left-23 w-36 sm:w-1/3 h-auto rotate-190" priority />
+        </div>
+
+        <div className="">  
+            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_2.png")} alt="" width={300} height={300} className="pointer-events-none absolute -bottom-25 left-60 -translate-x-1/2 w-44 sm:w-1/3 h-auto rotate-180" priority />
+            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra2.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-10 left-1/2 -translate-x-1/2 w-38 sm:w-1/3 h-auto rotate-230" priority />
+            <Image data-animate-decor src={asset(ASSETS.elementos, "flor_blanca.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 left-1/2 -translate-x-1/2 w-36 sm:w-1/3 h-auto rotate-190" priority />
+        </div>
+
+        <div className="">  
+            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-25 right-15 w-46 sm:w-1/3 h-auto rotate-190" priority />
+            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra3.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-15 right-20 w-38 sm:w-1/3 h-auto rotate-120" priority />
+            <Image data-animate-decor src={asset(ASSETS.elementos, "Flor_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 right-23 w-36 sm:w-1/3 h-auto rotate-190" priority />
+        </div>
+
+        <div className="">  
+          <Image data-animate-decor src={asset(ASSETS.elementos, "rama_1.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-20 -right-10 w-40 sm:w-1/3 h-auto rotate-180" priority />
+          <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-10 -right-10 w-34 sm:w-1/3 h-auto rotate-70" priority />
+          <Image data-animate-decor src={asset(ASSETS.elementos, "Flor_roja.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 -right-3 w-36 sm:w-1/3 h-auto rotate-190" priority />
+        </div>
+      </div>
+
+      {/* Nombres - Novios */}
       <section
-        ref={(el) => setSectionRef(el, 6)}
-        className="snap-section relative flex flex-col items-center justify-center"
-      >
-        <div className="w-full flex flex-col items-center gap-6 mt-6">
-
-          <Image data-anim-pop src={asset(ASSETS.elementos, "diseno_final.png")} alt="" width={600} height={500} className="w-full pt-17 px-2 h-auto object-contain" priority />
-          <Image data-animate-decor data-gsap-pulse src={asset(ASSETS.elementos, "corazon_rosa.png")} alt="" width={600} height={500} className="absolute z-5 mx-auto mt-3 w-30 h-auto object-contain" priority />
-
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full mt-6">
-
-            <div data-animate-decor data-gsap-pulse data-animate-title className="text-[#901F1A] text-center w-full">
-              <h2 className="text-6xl font-farmhouse">Alana <br /> Elizabeth</h2>
-            </div>
-
-            <div data-animate-content className="text-[#901F1A] uppercase text-center mt-8">
-              <h2 data-text-anim="reveal" className="text-4xl">mi bautizo</h2>
-              <p className="text-xl">y mi primer año</p>
-            </div>
-
+          ref={(el) => setSectionRef(el, 1)}
+          className="snap-section relative z-20 flex flex-col items-center justify-center z-5 mb-15"
+        >
+          <div className=" w-full h-full text-center py-15 mt-30">
+            <h2 data-text-anim="reveal" className="text-7xl font-tritopani">Ángel Eduardo</h2>
+            <h2 data-text-anim="reveal" className="text-2xl uppercase">Hernández Ramírez</h2>
+            <h2 data-text-anim="reveal" className="text-9xl font-tritopani leading-[0.4]">&</h2>
+            <h2 data-text-anim="reveal" className="text-7xl font-tritopani">Karina Itzel</h2>
+            <h2 data-text-anim="reveal" className="text-2xl uppercase">Figueroa González</h2>
           </div>
-
-          <Image src={asset(ASSETS.elementos, "papel_picado_final.png")} alt="" width={600} height={500} className="w-full h-auto object-contain" priority />
-
-        </div>
       </section>
+
+      {/* Diseño de flores */}
+      <div className="relative top-20 items-center justify-evenly z-10 h-auto" >
+        <div className="">  
+          <Image data-animate-decor src={asset(ASSETS.elementos, "rama_1.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-20 -left-10 w-40 sm:w-1/3 h-auto rotate-180" priority />
+          <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-10 -left-10 w-34 sm:w-1/3 h-auto rotate-70" priority />
+          <Image data-animate-decor src={asset(ASSETS.elementos, "Flor_roja.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 -left-3 w-36 sm:w-1/3 h-auto rotate-190" priority />
+        </div>
+
+        <div className="">  
+            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-25 left-15 w-46 sm:w-1/3 h-auto rotate-190" priority />
+            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra3.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-15 left-20 w-38 sm:w-1/3 h-auto rotate-120" priority />
+            <Image data-animate-decor src={asset(ASSETS.elementos, "Flor_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 left-23 w-36 sm:w-1/3 h-auto rotate-190" priority />
+        </div>
+
+        <div className="">  
+            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_2.png")} alt="" width={300} height={300} className="pointer-events-none absolute -bottom-25 left-60 -translate-x-1/2 w-44 sm:w-1/3 h-auto rotate-180" priority />
+            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra2.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-10 left-1/2 -translate-x-1/2 w-38 sm:w-1/3 h-auto rotate-230" priority />
+            <Image data-animate-decor src={asset(ASSETS.elementos, "flor_blanca.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 left-1/2 -translate-x-1/2 w-36 sm:w-1/3 h-auto rotate-190" priority />
+        </div>
+
+        <div className="">  
+            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-25 right-15 w-46 sm:w-1/3 h-auto rotate-190" priority />
+            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra3.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-15 right-20 w-38 sm:w-1/3 h-auto rotate-120" priority />
+            <Image data-animate-decor src={asset(ASSETS.elementos, "Flor_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 right-23 w-36 sm:w-1/3 h-auto rotate-190" priority />
+        </div>
+
+        <div className="">  
+          <Image data-animate-decor src={asset(ASSETS.elementos, "rama_1.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-20 -right-10 w-40 sm:w-1/3 h-auto rotate-180" priority />
+          <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-10 -right-10 w-34 sm:w-1/3 h-auto rotate-70" priority />
+          <Image data-animate-decor src={asset(ASSETS.elementos, "Flor_roja.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 -right-3 w-36 sm:w-1/3 h-auto rotate-190" priority />
+        </div>
+      </div>
 
       </div>
 

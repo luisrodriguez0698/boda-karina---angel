@@ -14,6 +14,12 @@ const farmhouse = localFont({
   variable: '--font-farmhouse',
 })
 
+// Configuración de Tritopani
+const tritopani = localFont({
+  src: '../../public/Assets/Tipografia/Tritopani.otf',
+  variable: '--font-tritopani',
+})
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -52,8 +58,9 @@ export default function RootLayout({
           ${geistSans.variable} 
           ${geistMono.variable} 
           ${dancingScript.variable} 
-          ${branley.variable} 
-          ${farmhouse.variable} 
+          ${branley.variable}
+          ${farmhouse.variable}
+          ${tritopani.variable}
           antialiased
         `}
       >
