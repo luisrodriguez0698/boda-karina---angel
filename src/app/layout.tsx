@@ -31,11 +31,11 @@ const dancingScript = Dancing_Script({
 });
 
 export const metadata: Metadata = {
-  title: "Alana - Mi 1er Cumpleaños",
-  description: "Invitación al primer cumpleaños de Alana",
+  title: "Angel & Karina",
+  description: "Invitación de boda",
   openGraph: {
-    title: "Alana - Mi 1er Cumpleaños",
-    description: "Invitación al primer cumpleaños de Alana",
+    title: "Angel & Karina",
+    description: "Invitación de boda",
     images: [{ url: "/Assets/ELEMENTOS/corazon_rosa.png" }],
   },
 };
