@@ -8,6 +8,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { initTextAnimations } from "@/lib/textAnimations";
 import Fireworks, { type FireworksHandlers } from "@fireworks-js/react";
 import Birds from "@/components/Birds";
+import PetalsFall from "@/components/PetalsFall";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -346,7 +347,7 @@ export default function Invitation() {
       if (!section) return;
       const title = section.querySelector("[data-animate-title]");
       const content = section.querySelector("[data-animate-content]");
-      const decor = section.querySelectorAll("[data-animate-decor]");
+      const decor = section.querySelectorAll("[data-animate-decor]:not([data-animate-wind]):not([data-animate-bouquet])");
 
       gsap.fromTo(
         section,
@@ -409,6 +410,149 @@ export default function Invitation() {
     return () => ScrollTrigger.getAll().forEach((t) => t.kill());
   }, [invitadoData]);
 
+  // Ramas y flores sueltas (fuera de las secciones): entrada aleatoria "traída por el viento" + balanceo 3D infinito
+  useEffect(() => {
+    if (!invitadoData || !containerRef.current) return;
+    const kills: Array<() => void> = [];
+
+    containerRef.current.querySelectorAll<HTMLElement>("[data-animate-wind]").forEach((el) => {
+      const dir = Math.random() < 0.5 ? -1 : 1;
+      const startX = dir * (25 + Math.random() * 35);
+      const startY = 18 + Math.random() * 28;
+      const startRot = dir * (18 + Math.random() * 22);
+      const enterDelay = Math.random() * 0.5;
+
+      gsap.set(el, {
+        x: startX,
+        y: startY,
+        rotation: startRot,
+        scale: 0.6,
+        opacity: 0,
+        transformPerspective: 500,
+      });
+
+      let windTweens: gsap.core.Tween[] = [];
+      const startWind = () => {
+        windTweens.forEach((t) => t.kill());
+        const dur = 2.4 + Math.random() * 2.4;
+        windTweens = [
+          gsap.to(el, {
+            rotation: `+=${(2 + Math.random() * 4) * (Math.random() < 0.5 ? -1 : 1)}`,
+            duration: dur,
+            ease: "sine.inOut",
+            repeat: -1,
+            yoyo: true,
+          }),
+          gsap.to(el, {
+            x: `+=${3 + Math.random() * 5}`,
+            y: `-=${2 + Math.random() * 4}`,
+            duration: dur * 1.25,
+            ease: "sine.inOut",
+            repeat: -1,
+            yoyo: true,
+            delay: Math.random() * 0.6,
+          }),
+          gsap.to(el, {
+            rotationY: 6 + Math.random() * 10,
+            rotationX: 3 + Math.random() * 5,
+            duration: dur * 0.85,
+            ease: "sine.inOut",
+            repeat: -1,
+            yoyo: true,
+            delay: Math.random() * 0.4,
+          }),
+        ];
+      };
+      const stopWind = () => {
+        windTweens.forEach((t) => t.kill());
+        windTweens = [];
+      };
+
+      const st = ScrollTrigger.create({
+        trigger: el,
+        start: "top 92%",
+        onEnter: () => {
+          gsap.to(el, {
+            x: 0,
+            y: 0,
+            rotation: 0,
+            scale: 1,
+            opacity: 1,
+            duration: 1 + Math.random() * 0.4,
+            delay: enterDelay,
+            ease: "power3.out",
+            onComplete: startWind,
+          });
+        },
+        onLeaveBack: () => {
+          stopWind();
+          gsap.to(el, {
+            x: startX,
+            y: startY,
+            rotation: startRot,
+            scale: 0.6,
+            opacity: 0,
+            duration: 0.4,
+            ease: "power2.in",
+          });
+        },
+      });
+
+      kills.push(() => { stopWind(); st.kill(); });
+    });
+
+    return () => kills.forEach((fn) => fn());
+  }, [invitadoData]);
+
+  // Ramos de flores (padrinos): aparecen y desaparecen al entrar/salir del scroll (en ambas
+  // direcciones) y, mientras están visibles, flotan con un ligero balanceo continuo.
+  useEffect(() => {
+    if (!invitadoData || !containerRef.current) return;
+    const kills: Array<() => void> = [];
+
+    containerRef.current.querySelectorAll<HTMLElement>("[data-animate-bouquet]").forEach((el) => {
+      gsap.set(el, { transformOrigin: "center center", scale: 0.5, opacity: 0, y: 24 });
+
+      let floatTweens: gsap.core.Tween[] = [];
+      const startFloat = () => {
+        floatTweens.forEach((t) => t.kill());
+        floatTweens = [
+          gsap.to(el, { y: -8, duration: 2.2, ease: "sine.inOut", repeat: -1, yoyo: true }),
+          gsap.to(el, { rotation: 4, duration: 3, ease: "sine.inOut", repeat: -1, yoyo: true, delay: 0.3 }),
+        ];
+      };
+      const stopFloat = () => {
+        floatTweens.forEach((t) => t.kill());
+        floatTweens = [];
+        gsap.set(el, { rotation: 0 });
+      };
+
+      const st = ScrollTrigger.create({
+        trigger: el,
+        start: "top 88%",
+        end: "bottom 12%",
+        onEnter: () => {
+          gsap.to(el, { scale: 1, opacity: 1, y: 0, duration: 0.7, ease: "back.out(1.4)", onComplete: startFloat });
+        },
+        onLeave: () => {
+          stopFloat();
+          gsap.to(el, { scale: 0.6, opacity: 0, y: -24, duration: 0.5, ease: "power2.in" });
+        },
+        onEnterBack: () => {
+          gsap.to(el, { scale: 1, opacity: 1, y: 0, duration: 0.7, ease: "back.out(1.4)", onComplete: startFloat });
+        },
+        onLeaveBack: () => {
+          stopFloat();
+          gsap.to(el, { scale: 0.6, opacity: 0, y: 24, duration: 0.5, ease: "power2.in" });
+        },
+      });
+
+      kills.push(() => { stopFloat(); st.kill(); });
+    });
+
+    return () => kills.forEach((fn) => fn());
+  }, [invitadoData]);
+
   // Animaciones infinitas: estrellas (rotar, pulso), reloj (oscilación), algunas al hacer scroll
   useEffect(() => {
     if (!invitadoData) return;
@@ -466,6 +610,60 @@ export default function Invitation() {
       );
     });
 
+    // Foto principal del Hero: efecto Ken Burns (zoom in/out lento e infinito).
+    // El contenedor tiene overflow-hidden y la imagen es object-cover, así que el
+    // zoom se recorta ahí adentro y no cambia el tamaño ni la posición en la página.
+    gsap.utils.toArray<HTMLElement>("[data-ken-burns]").forEach((el) => {
+      gsap.set(el, { transformOrigin: "center center" });
+      gsap.to(el, {
+        scale: 1.1,
+        duration: 6,
+        delay: 1,
+        repeat: -1,
+        yoyo: true,
+        ease: "sine.inOut",
+      });
+    });
+
+    // Íconos de detalles (fecha, iglesia, brindis, atuendos, regalo): un gesto propio e intermitente para cada uno
+    gsap.utils.toArray<HTMLElement>("[data-icon-nod]").forEach((el) => {
+      gsap.timeline({ repeat: -1, repeatDelay: 2.5 + Math.random() })
+        .to(el, { rotation: 12, duration: 0.35, ease: "power1.out", transformOrigin: "center center" })
+        .to(el, { rotation: -12, duration: 0.5, ease: "power1.inOut" })
+        .to(el, { rotation: 0, duration: 0.35, ease: "power1.in" });
+    });
+
+    gsap.utils.toArray<HTMLElement>("[data-icon-bell]").forEach((el) => {
+      gsap.timeline({ repeat: -1, repeatDelay: 2.8 + Math.random() })
+        .to(el, { y: -10, duration: 0.28, ease: "power2.out" })
+        .to(el, { y: 0, duration: 0.5, ease: "bounce.out" });
+    });
+
+    gsap.utils.toArray<HTMLElement>("[data-icon-cheers]").forEach((el) => {
+      gsap.timeline({ repeat: -1, repeatDelay: 3.2 + Math.random() })
+        .to(el, { rotation: -10, scale: 1.05, duration: 0.15, ease: "power1.out", transformOrigin: "bottom center" })
+        .to(el, { rotation: 10, duration: 0.15, ease: "power1.inOut" })
+        .to(el, { rotation: -6, duration: 0.15, ease: "power1.inOut" })
+        .to(el, { rotation: 0, scale: 1, duration: 0.3, ease: "power1.out" });
+    });
+
+    // Vestido y traje se mecen en direcciones opuestas, como si bailaran
+    gsap.utils.toArray<HTMLElement>("[data-icon-dance]").forEach((el, i) => {
+      const dir = i % 2 === 0 ? 1 : -1;
+      gsap.timeline({ repeat: -1, repeatDelay: 2 })
+        .to(el, { rotation: 8 * dir, duration: 0.6, ease: "sine.inOut", transformOrigin: "top center" })
+        .to(el, { rotation: -8 * dir, duration: 1.1, ease: "sine.inOut" })
+        .to(el, { rotation: 0, duration: 0.6, ease: "sine.inOut" });
+    });
+
+    gsap.utils.toArray<HTMLElement>("[data-icon-jump]").forEach((el) => {
+      gsap.timeline({ repeat: -1, repeatDelay: 2.4 })
+        .to(el, { y: -16, scale: 1.06, duration: 0.32, ease: "power2.out" })
+        .to(el, { y: 0, scale: 1, duration: 0.45, ease: "bounce.out" })
+        .to(el, { rotation: 6, duration: 0.15, ease: "power1.out" })
+        .to(el, { rotation: 0, duration: 0.25, ease: "power1.inOut" });
+    });
+
     // Rotación ligada al scroll (estrella que gira al hacer scroll)
     gsap.utils.toArray<HTMLElement>("[data-gsap-scroll-rotate]").forEach((el) => {
       gsap.to(el, {
@@ -482,7 +680,7 @@ export default function Invitation() {
     });
 
     return () => {
-      gsap.killTweensOf("[data-gsap-rotate], [data-gsap-pulse], [data-gsap-clock], [data-gsap-scroll-rotate], [data-gsap-sway]");
+      gsap.killTweensOf("[data-gsap-rotate], [data-gsap-pulse], [data-gsap-clock], [data-gsap-scroll-rotate], [data-gsap-sway], [data-icon-nod], [data-icon-bell], [data-icon-cheers], [data-icon-dance], [data-icon-jump], [data-ken-burns]");
       ScrollTrigger.getAll().forEach((t) => t.kill());
     };
   }, [invitadoData]);
@@ -739,7 +937,7 @@ export default function Invitation() {
           {/* Fondo solo de esta sección: red_paper de base, foto enmarcada encima */}
           <Image data-animate-decor src={asset(ASSETS.elementos, "red_paper.png")} alt="" width={1080} height={1920} className="absolute inset-0 w-full h-full object-cover" priority />
           <div className="absolute inset-6 sm:inset-10 overflow-hidden">
-            <Image data-animate-decor src={asset(ASSETS.fotos, "FOTO_PRINCIPAL.jpg")} alt="" width={1024} height={1534} className="w-full h-full object-cover py-10 brightness-80" priority />
+            <Image data-animate-decor data-ken-burns src={asset(ASSETS.fotos, "FOTO_PRINCIPAL.jpg")} alt="" width={1024} height={1534} className="w-full h-full object-cover py-10 brightness-80" priority />
 
             <div className="absolute inset-x-0 bottom-20 sm:bottom-10 text-center px-4">
               <div data-animate-title>
@@ -757,7 +955,7 @@ export default function Invitation() {
           </div>
 
           {/* Flores de esquina, las 4 a partir de un único asset (FLOR1.png) */}
-          <Image data-animate-decor src={asset(ASSETS.elementos, "FLOR1.png")} alt="" width={700} height={700} className="pointer-events-none absolute -top-10 -right-10 w-sm sm:w-1/3 h-auto" priority />
+          <Image src={asset(ASSETS.elementos, "FLOR1.png")} alt="" width={700} height={700} className="pointer-events-none absolute -top-10 -right-10 w-sm sm:w-1/3 h-auto" priority />
 
         </div>
       </section>
@@ -765,33 +963,33 @@ export default function Invitation() {
       {/* Diseño de flores */}
       <div className="relative top-10 items-center justify-evenly">
         <div className="">  
-          <Image data-animate-decor src={asset(ASSETS.elementos, "rama_1.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-20 -left-10 w-40 sm:w-1/3 h-auto rotate-180" priority />
-          <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-10 -left-10 w-34 sm:w-1/3 h-auto rotate-70" priority />
-          <Image data-animate-decor src={asset(ASSETS.elementos, "Flor_roja.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 -left-3 w-36 sm:w-1/3 h-auto rotate-190" priority />
+          <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_1.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-20 -left-10 w-40 sm:w-1/3 h-auto rotate-180" priority />
+          <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_extra.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-10 -left-10 w-34 sm:w-1/3 h-auto rotate-70" priority />
+          <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "Flor_roja.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 -left-3 w-30 sm:w-1/3 h-auto rotate-190" priority />
         </div>
 
         <div className="">  
-            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-25 left-15 w-46 sm:w-1/3 h-auto rotate-190" priority />
-            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra3.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-15 left-20 w-38 sm:w-1/3 h-auto rotate-120" priority />
-            <Image data-animate-decor src={asset(ASSETS.elementos, "Flor_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 left-23 w-36 sm:w-1/3 h-auto rotate-190" priority />
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-25 left-15 w-46 sm:w-1/3 h-auto rotate-190" priority />
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_extra3.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-15 left-20 w-38 sm:w-1/3 h-auto rotate-120" priority />
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "Flor_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 left-23 w-30 sm:w-1/3 h-auto rotate-190" priority />
         </div>
 
         <div className="">  
-            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_2.png")} alt="" width={300} height={300} className="pointer-events-none absolute -bottom-25 left-60 -translate-x-1/2 w-44 sm:w-1/3 h-auto rotate-180" priority />
-            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra2.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-10 left-1/2 -translate-x-1/2 w-38 sm:w-1/3 h-auto rotate-230" priority />
-            <Image data-animate-decor src={asset(ASSETS.elementos, "flor_blanca.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 left-1/2 -translate-x-1/2 w-36 sm:w-1/3 h-auto rotate-190" priority />
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_2.png")} alt="" width={300} height={300} className="pointer-events-none absolute -bottom-25 left-60 -translate-x-1/2 w-44 sm:w-1/3 h-auto rotate-180" priority />
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_extra2.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-10 left-1/2 -translate-x-1/2 w-38 sm:w-1/3 h-auto rotate-230" priority />
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "flor_blanca.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 left-1/2 -translate-x-1/2 w-30 sm:w-1/3 h-auto z-5" priority />
         </div>
 
         <div className="">  
-            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-25 right-15 w-46 sm:w-1/3 h-auto rotate-190" priority />
-            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra3.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-15 right-20 w-38 sm:w-1/3 h-auto rotate-120" priority />
-            <Image data-animate-decor src={asset(ASSETS.elementos, "Flor_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 right-23 w-36 sm:w-1/3 h-auto rotate-190" priority />
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-25 right-15 w-46 sm:w-1/3 h-auto rotate-190" priority />
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_extra3.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-15 right-20 w-38 sm:w-1/3 h-auto rotate-120" priority />
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "Flor_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 right-20 w-30 sm:w-1/3 h-auto rotate-190" priority />
         </div>
 
         <div className="">  
-          <Image data-animate-decor src={asset(ASSETS.elementos, "rama_1.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-20 -right-10 w-40 sm:w-1/3 h-auto rotate-180" priority />
-          <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-10 -right-10 w-34 sm:w-1/3 h-auto rotate-70" priority />
-          <Image data-animate-decor src={asset(ASSETS.elementos, "Flor_roja.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 -right-3 w-36 sm:w-1/3 h-auto rotate-190" priority />
+          <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_1.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-20 -right-10 w-40 sm:w-1/3 h-auto rotate-180" priority />
+          <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_extra.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-10 -right-10 w-34 sm:w-1/3 h-auto rotate-70" priority />
+          <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "Flor_roja.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 -right-3 w-30 sm:w-1/3 h-auto rotate-190" priority />
         </div>
       </div>
 
@@ -855,33 +1053,33 @@ export default function Invitation() {
       {/* Diseño de flores */}
       <div className="relative top-10 items-center justify-evenly z-10" >
         <div className="">  
-          <Image data-animate-decor src={asset(ASSETS.elementos, "rama_1.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-20 -left-10 w-40 sm:w-1/3 h-auto rotate-180" priority />
-          <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-10 -left-10 w-34 sm:w-1/3 h-auto rotate-70" priority />
-          <Image data-animate-decor src={asset(ASSETS.elementos, "Flor_roja.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 -left-3 w-36 sm:w-1/3 h-auto rotate-190" priority />
+          <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_1.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-20 -left-10 w-40 sm:w-1/3 h-auto rotate-180" priority />
+          <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_extra.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-10 -left-10 w-34 sm:w-1/3 h-auto rotate-70" priority />
+          <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "Flor_roja.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 -left-3 w-30 sm:w-1/3 h-auto rotate-190" priority />
         </div>
 
         <div className="">  
-            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-25 left-15 w-46 sm:w-1/3 h-auto rotate-190" priority />
-            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra3.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-15 left-20 w-38 sm:w-1/3 h-auto rotate-120" priority />
-            <Image data-animate-decor src={asset(ASSETS.elementos, "Flor_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 left-23 w-36 sm:w-1/3 h-auto rotate-190" priority />
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-25 left-15 w-46 sm:w-1/3 h-auto rotate-190" priority />
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_extra3.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-15 left-20 w-38 sm:w-1/3 h-auto rotate-120" priority />
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "Flor_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 left-23 w-30 sm:w-1/3 h-auto rotate-190" priority />
         </div>
 
         <div className="">  
-            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_2.png")} alt="" width={300} height={300} className="pointer-events-none absolute -bottom-25 left-60 -translate-x-1/2 w-44 sm:w-1/3 h-auto rotate-180" priority />
-            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra2.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-10 left-1/2 -translate-x-1/2 w-38 sm:w-1/3 h-auto rotate-230" priority />
-            <Image data-animate-decor src={asset(ASSETS.elementos, "flor_blanca.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 left-1/2 -translate-x-1/2 w-36 sm:w-1/3 h-auto rotate-190" priority />
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_2.png")} alt="" width={300} height={300} className="pointer-events-none absolute -bottom-25 left-60 -translate-x-1/2 w-44 sm:w-1/3 h-auto rotate-180" priority />
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_extra2.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-10 left-1/2 -translate-x-1/2 w-38 sm:w-1/3 h-auto rotate-230" priority />
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "flor_blanca.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 left-1/2 -translate-x-1/2 w-30 sm:w-1/3 h-auto rotate-190 z-5" priority />
         </div>
 
         <div className="">  
-            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-25 right-15 w-46 sm:w-1/3 h-auto rotate-190" priority />
-            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra3.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-15 right-20 w-38 sm:w-1/3 h-auto rotate-120" priority />
-            <Image data-animate-decor src={asset(ASSETS.elementos, "Flor_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 right-23 w-36 sm:w-1/3 h-auto rotate-190" priority />
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-25 right-15 w-46 sm:w-1/3 h-auto rotate-190" priority />
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_extra3.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-15 right-20 w-38 sm:w-1/3 h-auto rotate-120" priority />
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "Flor_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 right-23 w-30 sm:w-1/3 h-auto rotate-190" priority />
         </div>
 
         <div className="">  
-          <Image data-animate-decor src={asset(ASSETS.elementos, "rama_1.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-20 -right-10 w-40 sm:w-1/3 h-auto rotate-180" priority />
-          <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-10 -right-10 w-34 sm:w-1/3 h-auto rotate-70" priority />
-          <Image data-animate-decor src={asset(ASSETS.elementos, "Flor_roja.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 -right-3 w-36 sm:w-1/3 h-auto rotate-190" priority />
+          <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_1.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-20 -right-10 w-40 sm:w-1/3 h-auto rotate-180" priority />
+          <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_extra.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-10 -right-10 w-34 sm:w-1/3 h-auto rotate-70" priority />
+          <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "Flor_roja.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 -right-3 w-30 sm:w-1/3 h-auto rotate-190" priority />
         </div>
       </div>
 
@@ -900,7 +1098,7 @@ export default function Invitation() {
               <h2 data-text-anim="reveal" className="text-2xl uppercase">ALBERTINA RAMÍREZ <br /> MORENO</h2>
               <h2 data-text-anim="reveal" className="text-2xl uppercase">&</h2>
               <h2 data-text-anim="reveal" className="text-2xl uppercase">FRANCISCO JAVIER <br /> RIVERA MARTÍNEZ</h2>
-              <Image data-animate-decor src={asset(ASSETS.elementos, "RAMO_AZUL.png")} alt="" width={300} height={300} className="pointer-events-none mx-auto mt-10 w-32 sm:w-1/3 h-auto" priority />
+              <Image data-animate-decor data-animate-bouquet src={asset(ASSETS.elementos, "RAMO_AZUL.png")} alt="" width={300} height={300} className="pointer-events-none mx-auto mt-10 w-32 sm:w-1/3 h-auto" priority />
             </div>
 
             <div className="w-full h-full">
@@ -908,7 +1106,7 @@ export default function Invitation() {
               <h2 data-text-anim="reveal" className="text-2xl uppercase">MARGOT FIGUEROA <br /> VÁZQUEZ</h2>
               <h2 data-text-anim="reveal" className="text-2xl uppercase">&</h2>
               <h2 data-text-anim="reveal" className="text-2xl uppercase">Laura Patricia <br /> Figueroa Vázquez</h2>
-              <Image data-animate-decor src={asset(ASSETS.elementos, "RAMO_AZUL.png")} alt="" width={300} height={300} className="pointer-events-none mx-auto mt-10 w-32 sm:w-1/3 h-auto" priority />
+              <Image data-animate-decor data-animate-bouquet src={asset(ASSETS.elementos, "RAMO_AZUL.png")} alt="" width={300} height={300} className="pointer-events-none mx-auto mt-10 w-32 sm:w-1/3 h-auto" priority />
             </div>
 
             <div className="w-full h-full">
@@ -916,7 +1114,7 @@ export default function Invitation() {
               <h2 data-text-anim="reveal" className="text-2xl uppercase">Oralia Figueroa <br /> Vázquez</h2>
               <h2 data-text-anim="reveal" className="text-2xl uppercase">&</h2>
               <h2 data-text-anim="reveal" className="text-2xl uppercase">Miguel Esteban <br /> De La Cruz Cansino</h2>
-              <Image data-animate-decor src={asset(ASSETS.elementos, "RAMO_AZUL.png")} alt="" width={300} height={300} className="pointer-events-none mx-auto mt-10 w-32 sm:w-1/3 h-auto" priority />
+              <Image data-animate-decor data-animate-bouquet src={asset(ASSETS.elementos, "RAMO_AZUL.png")} alt="" width={300} height={300} className="pointer-events-none mx-auto mt-10 w-32 sm:w-1/3 h-auto" priority />
             </div>
 
             <div className="w-full h-full">
@@ -924,7 +1122,7 @@ export default function Invitation() {
               <h2 data-text-anim="reveal" className="text-2xl uppercase">María del Carmen <br /> Figueroa Vázquez</h2>
               <h2 data-text-anim="reveal" className="text-2xl uppercase">&</h2>
               <h2 data-text-anim="reveal" className="text-2xl uppercase">Eduardo Victoria <br /> Alboreso</h2>
-              <Image data-animate-decor src={asset(ASSETS.elementos, "RAMO_AZUL.png")} alt="" width={300} height={300} className="pointer-events-none mx-auto mt-10 w-32 sm:w-1/3 h-auto" priority />
+              <Image data-animate-decor data-animate-bouquet src={asset(ASSETS.elementos, "RAMO_AZUL.png")} alt="" width={300} height={300} className="pointer-events-none mx-auto mt-10 w-32 sm:w-1/3 h-auto" priority />
             </div>
       
             <div className="w-full h-full">
@@ -948,16 +1146,16 @@ export default function Invitation() {
           <div className=" w-full h-full text-center my-3">
             <h2 data-text-anim="reveal" className="text-7xl text-white font-tritopani">Fecha:</h2>
             <div className="flex flex-row items-center justify-center gap-4 h-full">
-              <img src={asset(ASSETS.elementos, "ICONOS-FECHA.png")} alt="" className="w-16"/>
-              <h2 data-text-anim="reveal" className="text-xl text-white uppercase text-left leading-6">12 de <br /> octubre <br /> 2026</h2>
+              <img data-icon-nod src={asset(ASSETS.elementos, "ICONOS-FECHA.png")} alt="" className="w-16"/>
+              <h2 data-text-anim="reveal" className="text-xl text-white uppercase text-left leading-6">12 de<br />octubre<br />2026</h2>
             </div>
           </div>
   
           <div className=" w-full h-full text-center my-3">
             <h2 data-text-anim="reveal" className="text-7xl text-white font-tritopani">Misa religiosa:</h2>
             <div className="flex flex-row items-center justify-center gap-4 h-full">
-              <img src={asset(ASSETS.elementos, "ICONOS-PARROQUIA.png")} alt="" className="w-20"/>
-              <h2 data-text-anim="reveal" className="text-xl text-white uppercase text-left leading-6">04 PM <br /> <span className="text-base">PARROQUIA DE</span> <br /> NUESTRA SEÑORA <br /> DEL SAGRADO <br /> CORAZÓN</h2>
+              <img data-icon-bell src={asset(ASSETS.elementos, "ICONOS-PARROQUIA.png")} alt="" className="w-20"/>
+              <h2 data-text-anim="reveal" className="text-xl text-white uppercase text-left leading-6">04 PM<br />PARROQUIA DE<br />NUESTRA SEÑORA<br />DEL SAGRADO<br />CORAZÓN</h2>
             </div>
             <a
               href={ENLACE_ITEM_1}
@@ -972,8 +1170,8 @@ export default function Invitation() {
           <div className=" w-full h-full text-center my-3">
             <h2 data-text-anim="reveal" className="text-7xl text-white font-tritopani">Recepción:</h2>
             <div className="flex flex-row items-center justify-center gap-4 h-full">
-              <img src={asset(ASSETS.elementos, "ICONOS-PARROQUIA.png")} alt="" className="w-20"/>
-              <h2 data-text-anim="reveal" className="text-xl text-white uppercase text-left leading-6">05 PM <br /> Hotel casa <br /> kolping</h2>
+              <img data-icon-cheers src={asset(ASSETS.elementos, "ICONOS-02.png")} alt="" className="w-20"/>
+              <h2 data-text-anim="reveal" className="text-xl text-white uppercase text-left leading-6">05 PM<br />Hotel casa<br />kolping</h2>
             </div>
             <a
               href={ENLACE_ITEM_2}
@@ -990,12 +1188,12 @@ export default function Invitation() {
             <p data-text-anim="reveal" className="text-white uppercase text-center text-sm leading-5">COCKTAIL/RIGUROSA FORMALIDAD  <br />DE NOCHE</p>
             <div className="flex flex-row items-center justify-center gap-4 h-full my-4">
               <div>
-                <img src={asset(ASSETS.elementos, "ICONOS-VESTIDO.png")} alt="" className="w-24 mx-auto my-3"/>
-                <p data-text-anim="reveal" className="text-white uppercase text-center text-sm leading-5">VESTIDOS LARGOS O <br /> DE CÓCTEL A LA RODILLA</p>
+                <img data-icon-dance src={asset(ASSETS.elementos, "ICONOS-VESTIDO.png")} alt="" className="w-24 mx-auto my-3"/>
+                <p data-text-anim="reveal" data-text-split="words"  className="text-white uppercase text-center text-xs leading-5">VESTIDOS LARGOS O <br /> DE CÓCTEL A LA RODILLA</p>
               </div>
               <div>
-                <img src={asset(ASSETS.elementos, "ICONOS-TRAJE.png")} alt="" className="w-24 mx-auto my-3"/>
-                <p data-text-anim="reveal" className="text-white uppercase text-center text-sm leading-5">TRAJE SASTRE FORMAL  <br />EN TONOS OSCUROS</p>
+                <img data-icon-dance src={asset(ASSETS.elementos, "ICONOS-TRAJE.png")} alt="" className="w-24 mx-auto my-3"/>
+                <p data-text-anim="reveal" data-text-split="words"  className="text-white uppercase text-center text-xs leading-5">TRAJE SASTRE FORMAL  <br />EN TONOS OSCUROS</p>
               </div>
             </div>
           </div>
@@ -1007,7 +1205,7 @@ export default function Invitation() {
           <div className="w-full h-full text-center my-3">
             <h2 data-text-anim="reveal" className="text-7xl text-white font-tritopani">Mesa de reglos:</h2>
             <div className="flex flex-row items-center justify-center gap-4 h-full">
-              <img src={asset(ASSETS.elementos, "ICONOS-REGALOS.png")} alt="" className="w-20"/>
+              <img data-icon-jump src={asset(ASSETS.elementos, "ICONOS-REGALOS.png")} alt="" className="w-20"/>
               <h2 data-text-anim="reveal" className="text-4xl text-white uppercase text-left leading-6">lIVERPOOL</h2>
             </div>
             <a
@@ -1032,18 +1230,18 @@ export default function Invitation() {
       {/* RSVP */}
       <section
           ref={(el) => setSectionRef(el, 4)}
-          className="snap-section relative flex flex-col items-center justify-center z-5 h-auto my-20"
+          className="snap-section relative flex flex-col items-center justify-center z-5 h-auto my-30 pb-15"
         >
         <div className=" inset-0 overflow-hidden">
 
         </div>
-        <div data-animate-title className="mb-2 w-full max-w-md" />
+        <div data-animate-title className=" w-full max-w-md" />
         <div className="relative w-full max-w-md">
           <h2 className="text-8xl font-tritopani text-center leading-8">
             Confirma tu <br /> asistencia
           </h2>
           <div className=" inset-0 flex flex-col items-center justify-center px-4 sm:px-12 w-80 m-auto">
-            <div data-animate-title className="w-full text-center text-2xl my-10">
+            <div data-animate-title className="w-full text-center text-2xl my-4">
               <h2 className="">{invitadoData.nombre}</h2>
             </div>
             {/* <div data-animate-content className="mt-4 w-full max-w-[200px] mx-auto text-center">
@@ -1052,14 +1250,14 @@ export default function Invitation() {
             {invitadoData.confirmado ? (
               <div data-anim-pop className="mt-4 text-center">
                 {invitadoData.pasesConfirmados > 0 ? (
-                  <div className="flex flex-col items-center gap-1">
+                  <div className="flex flex-col items-center gap-1 p-4">
                     <p className="text-2xl font-bold text-[#993B4D] uppercase tracking-wide">¡Te esperamos!</p>
                     {invitadoData.pasesConfirmados > 1 && (
                       <p className="text-xs text-[#993B4D]/80">{invitadoData.pasesConfirmados} pases confirmados</p>
                     )}
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center gap-1">
+                  <div className="flex flex-col items-center gap-1 p-4">
                     <p className="text-lg font-semibold text-[#993B4D] uppercase tracking-wide">Gracias por avisar</p>
                     <p className="text-xs text-[#993B4D]/80">Lamentamos que no puedas acompañarnos.</p>
                   </div>
@@ -1095,36 +1293,36 @@ export default function Invitation() {
         </div>
       </section>
 
-      {/* Diseño de flores */}
+      {/* Diseño de flores (ramas apuntando hacia arriba) */}
       <div className="relative top-20 items-center justify-evenly z-10" >
-        <div className="">  
-          <Image data-animate-decor src={asset(ASSETS.elementos, "rama_1.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-20 -left-10 w-40 sm:w-1/3 h-auto rotate-180" priority />
-          <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-10 -left-10 w-34 sm:w-1/3 h-auto rotate-70" priority />
-          <Image data-animate-decor src={asset(ASSETS.elementos, "Flor_roja.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 -left-3 w-36 sm:w-1/3 h-auto rotate-190" priority />
+        <div className="">
+          <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_1.png")} alt="" width={100} height={100} className="pointer-events-none absolute bottom-15 -left-10 w-40 sm:w-1/3 h-auto rotate-0" priority />
+          <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_extra.png")} alt="" width={100} height={100} className="pointer-events-none absolute bottom-13 -left-10 w-34 sm:w-1/3 h-auto rotate-250" priority />
+          <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "Flor_roja.png")} alt="" width={100} height={100} className="pointer-events-none absolute bottom-1 -left-3 w-30 sm:w-1/3 h-auto rotate-190" priority />
         </div>
 
-        <div className="">  
-            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-25 left-15 w-46 sm:w-1/3 h-auto rotate-190" priority />
-            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra3.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-15 left-20 w-38 sm:w-1/3 h-auto rotate-120" priority />
-            <Image data-animate-decor src={asset(ASSETS.elementos, "Flor_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 left-23 w-36 sm:w-1/3 h-auto rotate-190" priority />
+        <div className="">
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute bottom-15 left-15 w-46 sm:w-1/3 h-auto rotate-16" priority />
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_extra3.png")} alt="" width={100} height={100} className="pointer-events-none absolute bottom-14 left-20 w-38 sm:w-1/3 h-auto rotate-120" priority />
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "Flor_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute bottom-1 left-23 w-30 sm:w-1/3 h-auto rotate-190" priority />
         </div>
 
-        <div className="">  
-            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_2.png")} alt="" width={300} height={300} className="pointer-events-none absolute -bottom-25 left-60 -translate-x-1/2 w-44 sm:w-1/3 h-auto rotate-180" priority />
-            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra2.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-10 left-1/2 -translate-x-1/2 w-38 sm:w-1/3 h-auto rotate-230" priority />
-            <Image data-animate-decor src={asset(ASSETS.elementos, "flor_blanca.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 left-1/2 -translate-x-1/2 w-36 sm:w-1/3 h-auto rotate-190" priority />
+        <div className="">
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_2.png")} alt="" width={300} height={300} className="pointer-events-none absolute bottom-15 left-60 -translate-x-1/2 w-44 sm:w-1/3 h-auto rotate-0" priority />
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_extra2.png")} alt="" width={100} height={100} className="pointer-events-none absolute bottom-13 left-1/2 -translate-x-1/2 w-38 sm:w-1/3 h-auto rotate-50" priority />
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "flor_blanca.png")} alt="" width={100} height={100} className="pointer-events-none absolute bottom-1 left-1/2 -translate-x-1/2 w-30 sm:w-1/3 h-auto rotate-190 z-5" priority />
         </div>
 
-        <div className="">  
-            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-25 right-15 w-46 sm:w-1/3 h-auto rotate-190" priority />
-            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra3.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-15 right-20 w-38 sm:w-1/3 h-auto rotate-120" priority />
-            <Image data-animate-decor src={asset(ASSETS.elementos, "Flor_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 right-23 w-36 sm:w-1/3 h-auto rotate-190" priority />
+        <div className="">
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute bottom-15 right-15 w-46 sm:w-1/3 h-auto rotate-100" priority />
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_extra3.png")} alt="" width={100} height={100} className="pointer-events-none absolute bottom-14 right-20 w-38 sm:w-1/3 h-auto rotate-100" priority />
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "Flor_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute bottom-1 right-23 w-30 sm:w-1/3 h-auto rotate-190" priority />
         </div>
 
-        <div className="">  
-          <Image data-animate-decor src={asset(ASSETS.elementos, "rama_1.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-20 -right-10 w-40 sm:w-1/3 h-auto rotate-180" priority />
-          <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-10 -right-10 w-34 sm:w-1/3 h-auto rotate-70" priority />
-          <Image data-animate-decor src={asset(ASSETS.elementos, "Flor_roja.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 -right-3 w-36 sm:w-1/3 h-auto rotate-190" priority />
+        <div className="">
+          <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_1.png")} alt="" width={100} height={100} className="pointer-events-none absolute bottom-15 -right-10 w-40 sm:w-1/3 h-auto rotate-0" priority />
+          <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_extra.png")} alt="" width={100} height={100} className="pointer-events-none absolute bottom-13 -right-10 w-34 sm:w-1/3 h-auto rotate-250" priority />
+          <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "Flor_roja.png")} alt="" width={100} height={100} className="pointer-events-none absolute bottom-1 -right-3 w-30 sm:w-1/3 h-auto rotate-190" priority />
         </div>
       </div>
 
@@ -1192,33 +1390,33 @@ export default function Invitation() {
       {/* Diseño de flores */}
       <div className="relative top-20 items-center justify-evenly z-10" >
         <div className="">  
-          <Image data-animate-decor src={asset(ASSETS.elementos, "rama_1.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-20 -left-10 w-40 sm:w-1/3 h-auto rotate-180" priority />
-          <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-10 -left-10 w-34 sm:w-1/3 h-auto rotate-70" priority />
-          <Image data-animate-decor src={asset(ASSETS.elementos, "Flor_roja.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 -left-3 w-36 sm:w-1/3 h-auto rotate-190" priority />
+          <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_1.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-20 -left-10 w-40 sm:w-1/3 h-auto rotate-180" priority />
+          <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_extra.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-10 -left-10 w-34 sm:w-1/3 h-auto rotate-70" priority />
+          <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "Flor_roja.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 -left-3 w-30 sm:w-1/3 h-auto rotate-190" priority />
         </div>
 
         <div className="">  
-            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-25 left-15 w-46 sm:w-1/3 h-auto rotate-190" priority />
-            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra3.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-15 left-20 w-38 sm:w-1/3 h-auto rotate-120" priority />
-            <Image data-animate-decor src={asset(ASSETS.elementos, "Flor_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 left-23 w-36 sm:w-1/3 h-auto rotate-190" priority />
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-25 left-15 w-46 sm:w-1/3 h-auto rotate-190" priority />
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_extra3.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-15 left-20 w-38 sm:w-1/3 h-auto rotate-120" priority />
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "Flor_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 left-23 w-30 sm:w-1/3 h-auto rotate-190" priority />
         </div>
 
         <div className="">  
-            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_2.png")} alt="" width={300} height={300} className="pointer-events-none absolute -bottom-25 left-60 -translate-x-1/2 w-44 sm:w-1/3 h-auto rotate-180" priority />
-            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra2.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-10 left-1/2 -translate-x-1/2 w-38 sm:w-1/3 h-auto rotate-230" priority />
-            <Image data-animate-decor src={asset(ASSETS.elementos, "flor_blanca.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 left-1/2 -translate-x-1/2 w-36 sm:w-1/3 h-auto rotate-190" priority />
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_2.png")} alt="" width={300} height={300} className="pointer-events-none absolute -bottom-25 left-60 -translate-x-1/2 w-44 sm:w-1/3 h-auto rotate-180" priority />
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_extra2.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-10 left-1/2 -translate-x-1/2 w-38 sm:w-1/3 h-auto rotate-230" priority />
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "flor_blanca.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 left-1/2 -translate-x-1/2 w-30 sm:w-1/3 h-auto rotate-190 z-5" priority />
         </div>
 
         <div className="">  
-            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-25 right-15 w-46 sm:w-1/3 h-auto rotate-190" priority />
-            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra3.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-15 right-20 w-38 sm:w-1/3 h-auto rotate-120" priority />
-            <Image data-animate-decor src={asset(ASSETS.elementos, "Flor_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 right-23 w-36 sm:w-1/3 h-auto rotate-190" priority />
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-25 right-15 w-46 sm:w-1/3 h-auto rotate-190" priority />
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_extra3.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-15 right-20 w-38 sm:w-1/3 h-auto rotate-120" priority />
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "Flor_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 right-23 w-30 sm:w-1/3 h-auto rotate-190" priority />
         </div>
 
         <div className="">  
-          <Image data-animate-decor src={asset(ASSETS.elementos, "rama_1.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-20 -right-10 w-40 sm:w-1/3 h-auto rotate-180" priority />
-          <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-10 -right-10 w-34 sm:w-1/3 h-auto rotate-70" priority />
-          <Image data-animate-decor src={asset(ASSETS.elementos, "Flor_roja.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 -right-3 w-36 sm:w-1/3 h-auto rotate-190" priority />
+          <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_1.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-20 -right-10 w-40 sm:w-1/3 h-auto rotate-180" priority />
+          <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_extra.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-10 -right-10 w-34 sm:w-1/3 h-auto rotate-70" priority />
+          <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "Flor_roja.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 -right-3 w-30 sm:w-1/3 h-auto rotate-190" priority />
         </div>
       </div>
 
@@ -1236,40 +1434,43 @@ export default function Invitation() {
           </div>
       </section>
 
-      {/* Diseño de flores */}
-      <div className="relative top-20 items-center justify-evenly z-10 h-auto" >
-        <div className="">  
-          <Image data-animate-decor src={asset(ASSETS.elementos, "rama_1.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-20 -left-10 w-40 sm:w-1/3 h-auto rotate-180" priority />
-          <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-10 -left-10 w-34 sm:w-1/3 h-auto rotate-70" priority />
-          <Image data-animate-decor src={asset(ASSETS.elementos, "Flor_roja.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 -left-3 w-36 sm:w-1/3 h-auto rotate-190" priority />
+      {/* Diseño de flores (ramas apuntando hacia arriba) */}
+      <div className="relative top-20 items-center justify-evenly z-10 h-20 mb-18" >
+        <div className="">
+          <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_1.png")} alt="" width={100} height={100} className="pointer-events-none absolute bottom-15 -left-10 w-40 sm:w-1/3 h-auto rotate-0" priority />
+          <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_extra.png")} alt="" width={100} height={100} className="pointer-events-none absolute bottom-13 -left-10 w-34 sm:w-1/3 h-auto rotate-250" priority />
+          <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "Flor_roja.png")} alt="" width={100} height={100} className="pointer-events-none absolute bottom-1 -left-3 w-30 sm:w-1/3 h-auto rotate-190" priority />
         </div>
 
-        <div className="">  
-            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-25 left-15 w-46 sm:w-1/3 h-auto rotate-190" priority />
-            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra3.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-15 left-20 w-38 sm:w-1/3 h-auto rotate-120" priority />
-            <Image data-animate-decor src={asset(ASSETS.elementos, "Flor_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 left-23 w-36 sm:w-1/3 h-auto rotate-190" priority />
+        <div className="">
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute bottom-15 left-15 w-46 sm:w-1/3 h-auto rotate-16" priority />
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_extra3.png")} alt="" width={100} height={100} className="pointer-events-none absolute bottom-14 left-20 w-38 sm:w-1/3 h-auto rotate-120" priority />
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "Flor_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute bottom-1 left-23 w-30 sm:w-1/3 h-auto rotate-190" priority />
         </div>
 
-        <div className="">  
-            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_2.png")} alt="" width={300} height={300} className="pointer-events-none absolute -bottom-25 left-60 -translate-x-1/2 w-44 sm:w-1/3 h-auto rotate-180" priority />
-            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra2.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-10 left-1/2 -translate-x-1/2 w-38 sm:w-1/3 h-auto rotate-230" priority />
-            <Image data-animate-decor src={asset(ASSETS.elementos, "flor_blanca.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 left-1/2 -translate-x-1/2 w-36 sm:w-1/3 h-auto rotate-190" priority />
+        <div className="">
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_2.png")} alt="" width={300} height={300} className="pointer-events-none absolute bottom-15 left-60 -translate-x-1/2 w-44 sm:w-1/3 h-auto rotate-0" priority />
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_extra2.png")} alt="" width={100} height={100} className="pointer-events-none absolute bottom-13 left-1/2 -translate-x-1/2 w-38 sm:w-1/3 h-auto rotate-50" priority />
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "flor_blanca.png")} alt="" width={100} height={100} className="pointer-events-none absolute bottom-1 left-1/2 -translate-x-1/2 w-30 sm:w-1/3 h-auto rotate-190 z-5" priority />
         </div>
 
-        <div className="">  
-            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-25 right-15 w-46 sm:w-1/3 h-auto rotate-190" priority />
-            <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra3.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-15 right-20 w-38 sm:w-1/3 h-auto rotate-120" priority />
-            <Image data-animate-decor src={asset(ASSETS.elementos, "Flor_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 right-23 w-36 sm:w-1/3 h-auto rotate-190" priority />
+        <div className="">
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute bottom-15 right-15 w-46 sm:w-1/3 h-auto rotate-100" priority />
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_extra3.png")} alt="" width={100} height={100} className="pointer-events-none absolute bottom-14 right-20 w-38 sm:w-1/3 h-auto rotate-100" priority />
+            <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "Flor_azul.png")} alt="" width={100} height={100} className="pointer-events-none absolute bottom-1 right-23 w-30 sm:w-1/3 h-auto rotate-190" priority />
         </div>
 
-        <div className="">  
-          <Image data-animate-decor src={asset(ASSETS.elementos, "rama_1.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-20 -right-10 w-40 sm:w-1/3 h-auto rotate-180" priority />
-          <Image data-animate-decor src={asset(ASSETS.elementos, "rama_extra.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-10 -right-10 w-34 sm:w-1/3 h-auto rotate-70" priority />
-          <Image data-animate-decor src={asset(ASSETS.elementos, "Flor_roja.png")} alt="" width={100} height={100} className="pointer-events-none absolute -bottom-1 -right-3 w-36 sm:w-1/3 h-auto rotate-190" priority />
+        <div className="">
+          <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_1.png")} alt="" width={100} height={100} className="pointer-events-none absolute bottom-15 -right-10 w-40 sm:w-1/3 h-auto rotate-0" priority />
+          <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_extra.png")} alt="" width={100} height={100} className="pointer-events-none absolute bottom-13 -right-10 w-34 sm:w-1/3 h-auto rotate-250" priority />
+          <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "Flor_roja.png")} alt="" width={100} height={100} className="pointer-events-none absolute bottom-1 -right-3 w-30 sm:w-1/3 h-auto rotate-190" priority />
         </div>
       </div>
 
       </div>
+
+      {/* Pétalos de rosa blanca cayendo sobre toda la invitación (decorativo, no bloquea clicks) */}
+      <PetalsFall count={9} />
 
       {/* Botón flotante de música */}
       <button
