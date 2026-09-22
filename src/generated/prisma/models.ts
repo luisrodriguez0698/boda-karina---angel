@@ -8,6 +8,6 @@
  *
  * 🟢 You can import this file directly.
  */
-export type * from './models/User'
+export type * from './models/Usuario'
 export type * from './models/Invitado'
 export type * from './commonInputTypes'

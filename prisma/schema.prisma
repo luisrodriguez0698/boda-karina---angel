@@ -10,11 +10,13 @@ datasource db {
   provider = "postgresql"
 }
 
-model User {
+model Usuario {
   id           Int      @id @default(autoincrement())
   email        String   @unique
   passwordHash String
   createdAt    DateTime @default(now())
+
+  @@map("usuarios")
 }
 
 model Invitado {

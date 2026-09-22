@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
   if (!email || !password || typeof email !== "string" || typeof password !== "string") {
     return NextResponse.json({ error: "Faltan email o contraseña" }, { status: 400 });
   }
-  const user = await db.user.findUnique({ where: { email: email.trim().toLowerCase() } });
+  const user = await db.usuario.findUnique({ where: { email: email.trim().toLowerCase() } });
   if (!user) {
     return NextResponse.json({ error: "Credenciales incorrectas" }, { status: 401 });
   }

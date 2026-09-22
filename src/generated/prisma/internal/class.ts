@@ -20,7 +20,7 @@ const config: runtime.GetPrismaClientConfig = {
   "clientVersion": "7.4.0",
   "engineVersion": "ab56fe763f921d033a6c195e7ddeb3e255bdbb57",
   "activeProvider": "postgresql",
-  "inlineSchema": "// Prisma 7 + PostgreSQL (Railway)\n// URL de conexión en prisma.config.ts (DATABASE_URL)\n\ngenerator client {\n  provider = \"prisma-client\"\n  output   = \"../src/generated/prisma\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n}\n\nmodel User {\n  id           Int      @id @default(autoincrement())\n  email        String   @unique\n  passwordHash String\n  createdAt    DateTime @default(now())\n}\n\nmodel Invitado {\n  id                Int       @id @default(autoincrement())\n  nombre            String\n  numero            String    @unique\n  pases             Int\n  mesa              String?\n  confirmado        Boolean   @default(false)\n  pasesConfirmados  Int       @default(0)\n  fechaConfirmacion DateTime?\n}\n",
+  "inlineSchema": "// Prisma 7 + PostgreSQL (Railway)\n// URL de conexión en prisma.config.ts (DATABASE_URL)\n\ngenerator client {\n  provider = \"prisma-client\"\n  output   = \"../src/generated/prisma\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n}\n\nmodel Usuario {\n  id           Int      @id @default(autoincrement())\n  email        String   @unique\n  passwordHash String\n  createdAt    DateTime @default(now())\n\n  @@map(\"usuarios\")\n}\n\nmodel Invitado {\n  id                Int       @id @default(autoincrement())\n  nombre            String\n  numero            String    @unique\n  pases             Int\n  mesa              String?\n  confirmado        Boolean   @default(false)\n  pasesConfirmados  Int       @default(0)\n  fechaConfirmacion DateTime?\n}\n",
   "runtimeDataModel": {
     "models": {},
     "enums": {},
@@ -32,9 +32,9 @@ const config: runtime.GetPrismaClientConfig = {
   }
 }
 
-config.runtimeDataModel = JSON.parse("{\"models\":{\"User\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"passwordHash\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null},\"Invitado\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"nombre\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"numero\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"pases\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"mesa\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"confirmado\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"pasesConfirmados\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"fechaConfirmacion\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
+config.runtimeDataModel = JSON.parse("{\"models\":{\"Usuario\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"passwordHash\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":\"usuarios\"},\"Invitado\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"nombre\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"numero\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"pases\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"mesa\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"confirmado\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"pasesConfirmados\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"fechaConfirmacion\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
 config.parameterizationSchema = {
-  strings: JSON.parse("[\"where\",\"User.findUnique\",\"User.findUniqueOrThrow\",\"orderBy\",\"cursor\",\"User.findFirst\",\"User.findFirstOrThrow\",\"User.findMany\",\"data\",\"User.createOne\",\"User.createMany\",\"User.createManyAndReturn\",\"User.updateOne\",\"User.updateMany\",\"User.updateManyAndReturn\",\"create\",\"update\",\"User.upsertOne\",\"User.deleteOne\",\"User.deleteMany\",\"having\",\"_count\",\"_avg\",\"_sum\",\"_min\",\"_max\",\"User.groupBy\",\"User.aggregate\",\"Invitado.findUnique\",\"Invitado.findUniqueOrThrow\",\"Invitado.findFirst\",\"Invitado.findFirstOrThrow\",\"Invitado.findMany\",\"Invitado.createOne\",\"Invitado.createMany\",\"Invitado.createManyAndReturn\",\"Invitado.updateOne\",\"Invitado.updateMany\",\"Invitado.updateManyAndReturn\",\"Invitado.upsertOne\",\"Invitado.deleteOne\",\"Invitado.deleteMany\",\"Invitado.groupBy\",\"Invitado.aggregate\",\"AND\",\"OR\",\"NOT\",\"id\",\"nombre\",\"numero\",\"pases\",\"mesa\",\"confirmado\",\"pasesConfirmados\",\"fechaConfirmacion\",\"equals\",\"in\",\"notIn\",\"lt\",\"lte\",\"gt\",\"gte\",\"not\",\"contains\",\"startsWith\",\"endsWith\",\"email\",\"passwordHash\",\"createdAt\",\"set\",\"increment\",\"decrement\",\"multiply\",\"divide\"]"),
+  strings: JSON.parse("[\"where\",\"Usuario.findUnique\",\"Usuario.findUniqueOrThrow\",\"orderBy\",\"cursor\",\"Usuario.findFirst\",\"Usuario.findFirstOrThrow\",\"Usuario.findMany\",\"data\",\"Usuario.createOne\",\"Usuario.createMany\",\"Usuario.createManyAndReturn\",\"Usuario.updateOne\",\"Usuario.updateMany\",\"Usuario.updateManyAndReturn\",\"create\",\"update\",\"Usuario.upsertOne\",\"Usuario.deleteOne\",\"Usuario.deleteMany\",\"having\",\"_count\",\"_avg\",\"_sum\",\"_min\",\"_max\",\"Usuario.groupBy\",\"Usuario.aggregate\",\"Invitado.findUnique\",\"Invitado.findUniqueOrThrow\",\"Invitado.findFirst\",\"Invitado.findFirstOrThrow\",\"Invitado.findMany\",\"Invitado.createOne\",\"Invitado.createMany\",\"Invitado.createManyAndReturn\",\"Invitado.updateOne\",\"Invitado.updateMany\",\"Invitado.updateManyAndReturn\",\"Invitado.upsertOne\",\"Invitado.deleteOne\",\"Invitado.deleteMany\",\"Invitado.groupBy\",\"Invitado.aggregate\",\"AND\",\"OR\",\"NOT\",\"id\",\"nombre\",\"numero\",\"pases\",\"mesa\",\"confirmado\",\"pasesConfirmados\",\"fechaConfirmacion\",\"equals\",\"in\",\"notIn\",\"lt\",\"lte\",\"gt\",\"gte\",\"not\",\"contains\",\"startsWith\",\"endsWith\",\"email\",\"passwordHash\",\"createdAt\",\"set\",\"increment\",\"decrement\",\"multiply\",\"divide\"]"),
   graph: "YRUgBywAAE8AMC0AAAQAEC4AAE8AMC8CAAAAAUIBAAAAAUMBAEcAIURAAFAAIQEAAAABACABAAAAAQAgBywAAE8AMC0AAAQAEC4AAE8AMC8CAEYAIUIBAEcAIUMBAEcAIURAAFAAIQADAAAABAAgAwAABQAwBAAAAQAgAwAAAAQAIAMAAAUAMAQAAAEAIAMAAAAEACADAAAFADAEAAABACAELwIAAAABQgEAAAABQwEAAAABREAAAAABAQgAAAkAIAQvAgAAAAFCAQAAAAFDAQAAAAFEQAAAAAEBCAAACwAwAQgAAAsAMAQvAgBYACFCAQBXACFDAQBXACFEQABhACECAAAAAQAgCAAADgAgBC8CAFgAIUIBAFcAIUMBAFcAIURAAGEAIQIAAAAEACAIAAAQACACAAAABAAgCAAAEAAgAwAAAAEAIA8AAAkAIBAAAA4AIAEAAAABACABAAAABAAgBRUAAFwAIBYAAF0AIBcAAGAAIBgAAF8AIBkAAF4AIAcsAABLADAtAAAXABAuAABLADAvAgA0ACFCAQA1ACFDAQA1ACFEQABMACEDAAAABAAgAwAAFgAwFAAAFwAgAwAAAAQAIAMAAAUAMAQAAAEAIAssAABFADAtAAAdABAuAABFADAvAgAAAAEwAQBHACExAQAAAAEyAgBGACEzAQBIACE0IABJACE1AgBGACE2QABKACEBAAAAGgAgAQAAABoAIAssAABFADAtAAAdABAuAABFADAvAgBGACEwAQBHACExAQBHACEyAgBGACEzAQBIACE0IABJACE1AgBGACE2QABKACECMwAAUQAgNgAAUQAgAwAAAB0AIAMAAB4AMAQAABoAIAMAAAAdACADAAAeADAEAAAaACADAAAAHQAgAwAAHgAwBAAAGgAgCC8CAAAAATABAAAAATEBAAAAATICAAAAATMBAAAAATQgAAAAATUCAAAAATZAAAAAAQEIAAAiACAILwIAAAABMAEAAAABMQEAAAABMgIAAAABMwEAAAABNCAAAAABNQIAAAABNkAAAAABAQgAACQAMAEIAAAkADAILwIAWAAhMAEAVwAhMQEAVwAhMgIAWAAhMwEAWQAhNCAAWgAhNQIAWAAhNkAAWwAhAgAAABoAIAgAACcAIAgvAgBYACEwAQBXACExAQBXACEyAgBYACEzAQBZACE0IABaACE1AgBYACE2QABbACECAAAAHQAgCAAAKQAgAgAAAB0AIAgAACkAIAMAAAAaACAPAAAiACAQAAAnACABAAAAGgAgAQAAAB0AIAcVAABSACAWAABTACAXAABWACAYAABVACAZAABUACAzAABRACA2AABRACALLAAAMwAwLQAAMAAQLgAAMwAwLwIANAAhMAEANQAhMQEANQAhMgIANAAhMwEANgAhNCAANwAhNQIANAAhNkAAOAAhAwAAAB0AIAMAAC8AMBQAADAAIAMAAAAdACADAAAeADAEAAAaACALLAAAMwAwLQAAMAAQLgAAMwAwLwIANAAhMAEANQAhMQEANQAhMgIANAAhMwEANgAhNCAANwAhNQIANAAhNkAAOAAhDRUAAD0AIBYAAEQAIBcAAD0AIBgAAD0AIBkAAD0AIDcCAAAAATgCAAAABDkCAAAABDoCAAAAATsCAAAAATwCAAAAAT0CAAAAAT4CAEMAIQ4VAAA9ACAYAABCACAZAABCACA3AQAAAAE4AQAAAAQ5AQAAAAQ6AQAAAAE7AQAAAAE8AQAAAAE9AQAAAAE-AQBBACE_AQAAAAFAAQAAAAFBAQAAAAEOFQAAOgAgGAAAQAAgGQAAQAAgNwEAAAABOAEAAAAFOQEAAAAFOgEAAAABOwEAAAABPAEAAAABPQEAAAABPgEAPwAhPwEAAAABQAEAAAABQQEAAAABBRUAAD0AIBgAAD4AIBkAAD4AIDcgAAAAAT4gADwAIQsVAAA6ACAYAAA7ACAZAAA7ACA3QAAAAAE4QAAAAAU5QAAAAAU6QAAAAAE7QAAAAAE8QAAAAAE9QAAAAAE-QAA5ACELFQAAOgAgGAAAOwAgGQAAOwAgN0AAAAABOEAAAAAFOUAAAAAFOkAAAAABO0AAAAABPEAAAAABPUAAAAABPkAAOQAhCDcCAAAAATgCAAAABTkCAAAABToCAAAAATsCAAAAATwCAAAAAT0CAAAAAT4CADoAIQg3QAAAAAE4QAAAAAU5QAAAAAU6QAAAAAE7QAAAAAE8QAAAAAE9QAAAAAE-QAA7ACEFFQAAPQAgGAAAPgAgGQAAPgAgNyAAAAABPiAAPAAhCDcCAAAAATgCAAAABDkCAAAABDoCAAAAATsCAAAAATwCAAAAAT0CAAAAAT4CAD0AIQI3IAAAAAE-IAA-ACEOFQAAOgAgGAAAQAAgGQAAQAAgNwEAAAABOAEAAAAFOQEAAAAFOgEAAAABOwEAAAABPAEAAAABPQEAAAABPgEAPwAhPwEAAAABQAEAAAABQQEAAAABCzcBAAAAATgBAAAABTkBAAAABToBAAAAATsBAAAAATwBAAAAAT0BAAAAAT4BAEAAIT8BAAAAAUABAAAAAUEBAAAAAQ4VAAA9ACAYAABCACAZAABCACA3AQAAAAE4AQAAAAQ5AQAAAAQ6AQAAAAE7AQAAAAE8AQAAAAE9AQAAAAE-AQBBACE_AQAAAAFAAQAAAAFBAQAAAAELNwEAAAABOAEAAAAEOQEAAAAEOgEAAAABOwEAAAABPAEAAAABPQEAAAABPgEAQgAhPwEAAAABQAEAAAABQQEAAAABDRUAAD0AIBYAAEQAIBcAAD0AIBgAAD0AIBkAAD0AIDcCAAAAATgCAAAABDkCAAAABDoCAAAAATsCAAAAATwCAAAAAT0CAAAAAT4CAEMAIQg3CAAAAAE4CAAAAAQ5CAAAAAQ6CAAAAAE7CAAAAAE8CAAAAAE9CAAAAAE-CABEACELLAAARQAwLQAAHQAQLgAARQAwLwIARgAhMAEARwAhMQEARwAhMgIARgAhMwEASAAhNCAASQAhNQIARgAhNkAASgAhCDcCAAAAATgCAAAABDkCAAAABDoCAAAAATsCAAAAATwCAAAAAT0CAAAAAT4CAD0AIQs3AQAAAAE4AQAAAAQ5AQAAAAQ6AQAAAAE7AQAAAAE8AQAAAAE9AQAAAAE-AQBCACE_AQAAAAFAAQAAAAFBAQAAAAELNwEAAAABOAEAAAAFOQEAAAAFOgEAAAABOwEAAAABPAEAAAABPQEAAAABPgEAQAAhPwEAAAABQAEAAAABQQEAAAABAjcgAAAAAT4gAD4AIQg3QAAAAAE4QAAAAAU5QAAAAAU6QAAAAAE7QAAAAAE8QAAAAAE9QAAAAAE-QAA7ACEHLAAASwAwLQAAFwAQLgAASwAwLwIANAAhQgEANQAhQwEANQAhREAATAAhCxUAAD0AIBgAAE4AIBkAAE4AIDdAAAAAAThAAAAABDlAAAAABDpAAAAAATtAAAAAATxAAAAAAT1AAAAAAT5AAE0AIQsVAAA9ACAYAABOACAZAABOACA3QAAAAAE4QAAAAAQ5QAAAAAQ6QAAAAAE7QAAAAAE8QAAAAAE9QAAAAAE-QABNACEIN0AAAAABOEAAAAAEOUAAAAAEOkAAAAABO0AAAAABPEAAAAABPUAAAAABPkAATgAhBywAAE8AMC0AAAQAEC4AAE8AMC8CAEYAIUIBAEcAIUMBAEcAIURAAFAAIQg3QAAAAAE4QAAAAAQ5QAAAAAQ6QAAAAAE7QAAAAAE8QAAAAAE9QAAAAAE-QABOACEAAAAAAAABRQEAAAABBUUCAAAAAUYCAAAAAUcCAAAAAUgCAAAAAUkCAAAAAQFFAQAAAAEBRSAAAAABAUVAAAAAAQAAAAAAAUVAAAAAAQAAAAAFFQAGFgAHFwAIGAAJGQAKAAAAAAAFFQAGFgAHFwAIGAAJGQAKAAAABRUAEBYAERcAEhgAExkAFAAAAAAABRUAEBYAERcAEhgAExkAFAECAQIDAQUGAQYHAQcIAQkKAQoMAgsNAwwPAQ0RAg4SBBETARIUARMVAhoYBRsZCxwbDB0cDB4fDB8gDCAhDCEjDCIlAiMmDSQoDCUqAiYrDicsDCgtDCkuAioxDysyFQ"
 }
 
@@ -68,8 +68,8 @@ export interface PrismaClientConstructor {
    * @example
    * ```
    * const prisma = new PrismaClient()
-   * // Fetch zero or more Users
-   * const users = await prisma.user.findMany()
+   * // Fetch zero or more Usuarios
+   * const usuarios = await prisma.usuario.findMany()
    * ```
    * 
    * Read more in our [docs](https://pris.ly/d/client).
@@ -90,8 +90,8 @@ export interface PrismaClientConstructor {
  * @example
  * ```
  * const prisma = new PrismaClient()
- * // Fetch zero or more Users
- * const users = await prisma.user.findMany()
+ * // Fetch zero or more Usuarios
+ * const usuarios = await prisma.usuario.findMany()
  * ```
  * 
  * Read more in our [docs](https://pris.ly/d/client).
@@ -185,14 +185,14 @@ export interface PrismaClient<
   }>>
 
       /**
-   * `prisma.user`: Exposes CRUD operations for the **User** model.
+   * `prisma.usuario`: Exposes CRUD operations for the **Usuario** model.
     * Example usage:
     * ```ts
-    * // Fetch zero or more Users
-    * const users = await prisma.user.findMany()
+    * // Fetch zero or more Usuarios
+    * const usuarios = await prisma.usuario.findMany()
     * ```
     */
-  get user(): Prisma.UserDelegate<ExtArgs, { omit: OmitOpts }>;
+  get usuario(): Prisma.UsuarioDelegate<ExtArgs, { omit: OmitOpts }>;
 
   /**
    * `prisma.invitado`: Exposes CRUD operations for the **Invitado** model.
