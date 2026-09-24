@@ -937,7 +937,7 @@ export default function Invitation() {
           {/* Fondo solo de esta sección: red_paper de base, foto enmarcada encima */}
           <Image data-animate-decor src={asset(ASSETS.elementos, "red_paper.png")} alt="" width={1080} height={1920} className="absolute inset-0 w-full h-full object-cover" priority />
           <div className="absolute inset-6 sm:inset-10 overflow-hidden">
-            <Image data-animate-decor data-ken-burns src={asset(ASSETS.fotos, "FOTO_PRINCIPAL.jpg")} alt="" width={1024} height={1534} className="w-full h-full object-cover py-10 brightness-80" priority />
+            <Image data-animate-decor data-ken-burns src={asset(ASSETS.fotos, "F_3.jpg")} alt="" width={1024} height={1534} className="w-full h-full object-cover py-10 brightness-80" priority />
 
             <div className="absolute inset-x-0 bottom-20 sm:bottom-10 text-center px-4">
               <div data-animate-title>
@@ -949,7 +949,7 @@ export default function Invitation() {
                 </h2>
               </div>
               <p data-text-anim="reveal" className="mt-3 text-2xl sm:text-xl tracking-[0.35em] text-[#24406B]">
-                12.11.2026
+                12.10.2026
               </p>
             </div>
           </div>
@@ -1330,9 +1330,9 @@ export default function Invitation() {
       <div>
         <section
           ref={(el) => setSectionRef(el, 2)}
-          className="snap-section relative flex flex-col items-center justify-center pb-20"
+          className="snap-section relative flex flex-col items-center justify-center"
         >
-          <Image src={asset(ASSETS.elementos, "red_paper.png")} alt="" width={1080} height={1920} className="absolute inset-0 w-full h-full object-cover" priority />
+          {/* <Image src={asset(ASSETS.elementos, "red_paper.png")} alt="" width={1080} height={1920} className="absolute inset-0 w-full h-full object-cover" priority />
 
           <div className="relative w-full px-10">
             <h2 data-text-anim="reveal" className="mb-6 text-center text-5xl text-white font-tritopani">Nuestra Historia</h2>
@@ -1382,10 +1382,15 @@ export default function Invitation() {
                 />
               ))}
             </div>
-          </div>
+          </div> */}
+
+        <div>
+          <Image data-animate-decor src={asset(ASSETS.fotos, "F_6.jpg")} alt="" width={1024} height={1534} className="w-full h-full object-cover brightness-80" priority />
+        </div>
 
         </section>
       </div>
+
 
       {/* Diseño de flores */}
       <div className="relative top-20 items-center justify-evenly z-10" >
@@ -1435,7 +1440,7 @@ export default function Invitation() {
       </section>
 
       {/* Diseño de flores (ramas apuntando hacia arriba) */}
-      <div className="relative top-20 items-center justify-evenly z-10 h-20 mb-18" >
+      <div className="relative top-20 items-center justify-evenly z-10 h-20 mb-21" >
         <div className="">
           <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_1.png")} alt="" width={100} height={100} className="pointer-events-none absolute bottom-15 -left-10 w-40 sm:w-1/3 h-auto rotate-0" priority />
           <Image data-animate-decor data-animate-wind src={asset(ASSETS.elementos, "rama_extra.png")} alt="" width={100} height={100} className="pointer-events-none absolute bottom-13 -left-10 w-34 sm:w-1/3 h-auto rotate-250" priority />
