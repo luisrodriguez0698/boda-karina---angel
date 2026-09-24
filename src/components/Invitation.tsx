@@ -1090,6 +1090,22 @@ export default function Invitation() {
         >
           <div className="text-center py-5 mt-30">
             <div>
+              <h2 data-text-anim="reveal" className="text-7xl font-tritopani">Nuestros padres</h2>
+            </div>
+
+            <div className="w-full h-full">
+              <h2 data-text-anim="reveal" className="text-xl uppercase italic my-4">Padres del novio:</h2>
+              <h2 data-text-anim="reveal" className="text-2xl uppercase">Ángel Hernández Pérez</h2>
+              <h2 data-text-anim="reveal" className="text-2xl uppercase">&</h2>
+              <h2 data-text-anim="reveal" className="text-2xl uppercase">Ema Ramírez Moreno</h2>
+              <h2 data-text-anim="reveal" className="text-xl uppercase italic my-4">Padres de la novia:</h2>
+              <h2 data-text-anim="reveal" className="text-2xl uppercase">Saúl Figueroa Vásquez</h2>
+              <h2 data-text-anim="reveal" className="text-2xl uppercase">&</h2>
+              <h2 data-text-anim="reveal" className="text-2xl uppercase">Marleni González Rivera</h2>
+              <Image data-animate-decor data-animate-bouquet src={asset(ASSETS.elementos, "RAMO_AZUL.png")} alt="" width={300} height={300} className="pointer-events-none mx-auto mt-10 w-32 sm:w-1/3 h-auto" priority />
+            </div>
+
+            <div>
               <h2 data-text-anim="reveal" className="text-7xl font-tritopani">Nuestros padrinos</h2>
             </div>
 
